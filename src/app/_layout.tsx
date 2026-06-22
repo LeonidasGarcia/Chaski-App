@@ -1,9 +1,12 @@
 import { Stack } from 'expo-router';
+import { DatabaseProvider } from '@/context/DatabaseContext';
 
 export default function RootLayout() {
     return (
-        <Stack>
-            <Stack.Screen name="index" options={{ title: 'Home' }} />
-        </Stack>
+        <DatabaseProvider>
+            <Stack>
+                <Stack.Screen name="index" options={{ title: 'Home' }} />
+            </Stack>
+        </DatabaseProvider>
     );
 }
