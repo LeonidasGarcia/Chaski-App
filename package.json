@@ -36,10 +36,5 @@
         "format": "prettier --write .",
         "release": "semantic-release"
     },
-    "private": true,
-    "pnpm": {
-        "onlyBuiltDependencies": [
-            "unrs-resolver"
-        ]
-    }
+    "private": true
 }
