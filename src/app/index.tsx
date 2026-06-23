@@ -1,20 +1,6 @@
-import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
-import { useDatabaseContext } from '@/context/DatabaseContext';
+import { useOnboardingGuard } from '@/features/onboarding/guards/useOnboardingGuard';
 
 export default function HomeScreen() {
-    const router = useRouter();
-    const { userProfile } = useDatabaseContext();
-
-    useEffect(() => {
-        userProfile.get().then((profile) => {
-            if (!profile) {
-                router.replace('/onboarding');
-            } else {
-                router.replace('/(tabs)/profile');
-            }
-        });
-    }, [router, userProfile]);
-
+    useOnboardingGuard();
     return null;
 }

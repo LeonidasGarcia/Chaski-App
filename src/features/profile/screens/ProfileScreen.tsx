@@ -1,12 +1,10 @@
-import { useCallback, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useUnistyles } from 'react-native-unistyles';
-import { useDatabaseContext } from '@/context/DatabaseContext';
-import type { UserProfileRepository } from '@/types/database';
 import Button from '@/components/Button';
 import SectionCard from '@/components/SectionCard';
 import MetricRow from '@/components/MetricRow';
+import { useProfile } from '../hooks/useProfile';
 import {
     calculateBMI,
     getBMICategory,
@@ -28,19 +26,8 @@ const GENDER_LABELS: Record<string, string> = {
 
 export default function ProfileScreen() {
     const { theme } = useUnistyles();
-    const { userProfile } = useDatabaseContext();
     const router = useRouter();
-    const [profile, setProfile] = useState<UserProfileRepository | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useFocusEffect(
-        useCallback(() => {
-            userProfile.get().then((p) => {
-                setProfile(p);
-                setLoading(false);
-            });
-        }, [userProfile]),
-    );
+    const { profile, loading } = useProfile();
 
     if (loading || !profile) return null;
 
