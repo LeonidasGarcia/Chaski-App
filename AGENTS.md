@@ -165,3 +165,62 @@ const styles = StyleSheet.create((theme) => ({
 - La tipografía SOLO se modifica en `src/theme/typography.ts`
 - El espaciado SOLO se modifica en `src/theme/index.ts` (escala de 4)
 - Los componentes NUNCA hardcodean `color`, `fontSize`, `fontFamily`, `fontWeight` ni valores de padding/margin
+
+# Feature Architecture
+
+## Stack
+
+- `react-hook-form@7.80` + `@hookform/resolvers@5.4` + `zod@4.4`
+- Unistyles para estilos, expo-router para navegación
+
+## Estructura de una feature
+
+Cada feature vive en `src/features/<nombre>/` con esta estructura:
+
+```
+src/features/onboarding/
+├── constants/index.ts        → Opciones de chips, strings
+├── guards/useOnboardingGuard.ts  → Guard de navegación (redirect si no hay perfil)
+├── hooks/useOnboardingForm.ts    → Hook con lógica del formulario
+├── schemas/onboarding.ts         → Schema zod + tipo inferido
+└── screens/OnboardingScreen.tsx  → Screen con Controllers + UI
+```
+
+## Responsabilidades
+
+| Carpeta | Rol |
+|---|---|
+| `constants/` | Datos planos tipados (opciones, labels) |
+| `guards/` | Hooks que interceptan navegación (redirect condicional) |
+| `hooks/` | Lógica de feature reusable (formularios, fetching) |
+| `schemas/` | Schemas zod + tipos inferidos |
+| `screens/` | Componente de pantalla (solo Controllers + UI) |
+
+## Convenciones
+
+- **Route files** en `src/app/` solo re-exportan el screen: `export { default } from '@/features/.../screens/...'`
+- **Guard** se usa en el screen destino para redirect condicional (ej: home usa `useOnboardingGuard`)
+- **Hook** extrae `useForm`, submit, y conexión a BD. El screen no llama `useForm` directamente
+- **Schema** separa validación del screen: facilita reuso y testing
+- **Constants** evita magic strings/arrays dentro del screen
+- **zod v4**: usar `{ message: '...' }` en lugar de `invalid_type_error`/`required_error`; agregar `as const` en `z.enum()`
+- **Resolver**: `zodResolver(schema as any)` por incompatibilidad de tipos entre `zod/v4/classic` y `zod/v4/core`
+
+## Componentes compartidos
+
+En `src/components/`:
+
+| Componente | Props clave |
+|---|---|
+| `ScreenContainer` | `children` — KeyboardAvoidingView + ScrollView |
+| `InputField` | `label`, `value`, `onChangeText`, `keyboardType?`, `error?` |
+| `ChipSelector` | `label`, `options: ChipOption[]`, `selected`, `onSelect`, `error?` |
+| `Button` | `title`, `onPress`, `disabled?` |
+
+## Flujo de onboarding (referencia)
+
+1. `index.tsx` monta → `useOnboardingGuard()` ejecuta `userProfile.get()`
+2. Si no hay perfil → `router.replace('/onboarding')`
+3. `OnboardingScreen` renderiza con `useOnboardingForm()`
+4. Submit → `userProfile.upsert()` con `id=1` → `router.replace('/')`
+5. Al volver a home, `useOnboardingGuard` encuentra el perfil y renderiza
