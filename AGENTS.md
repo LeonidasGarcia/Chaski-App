@@ -76,3 +76,151 @@ function MyComponent() {
 ## DevTools
 
 El inspector de BD se abre desde la terminal de Expo: Shift+M → Open expo-sqlite
+
+# Styling Layer
+
+## Stack
+
+- `react-native-unistyles@3.2.5` con `useUnistyles` + `StyleSheet.create(theme => ...)`
+- `expo-font` con `@expo-google-fonts/rubik` y `@expo-google-fonts/plus-jakarta-sans`
+- **Regla**: ningún componente debe tener colores, tipografías o espaciados hardcodeados. Todo se lee del tema.
+
+## Arquitectura
+
+- `src/theme/index.ts` → define temas light/dark con `colors`, `spacing`, `typography` + `StyleSheet.configure()`
+- `src/theme/typography.ts` → `typography.presets` con 7 presets (display, h1, h2, h3, body, button, caption)
+- `src/app/_layout.tsx` → carga fuentes con `useFonts()` antes de renderizar
+- `index.ts` (raíz) → importa `./src/theme` antes que cualquier componente
+
+## Colores del tema
+
+Acceso vía `theme.colors.*`:
+
+| Token | Light | Dark | Uso |
+|---|---|---|---|
+| `primary` | `#19FA00` | `#19FA00` | Botones, acentos, display |
+| `background` | `#FFFFFF` | `#000000` | Fondo de pantallas |
+| `surface` | `#F7F7F7` | `#0F0F0F` | Tarjetas, contenedores |
+| `surfaceSecondary` | `#F0F0F0` | `#1A1A1A` | Secondary cards |
+| `text` | `#000000` | `#FFFFFF` | Texto principal |
+| `textSecondary` | `#1A1A1A` | `#E8E8E8` | Subtítulos |
+| `textTertiary` | `#2E2E2E` | `#D1D1D1` | Captions, metadata |
+| `border` | `#E6E6E6` | `#262626` | Bordes principales |
+| `borderSecondary` | `#D1D1D1` | `#333333` | Bordes secundarios |
+| `error` | `#DC2626` | `#FF5252` | Errores |
+| `success` | `#16A34A` | `#22C55E` | Éxito |
+
+## Tipografía
+
+Acceso vía `theme.typography.presets.*`:
+
+| Preset | FontFamily | Size | Peculiaridad | Uso |
+|---|---|---|---|---|
+| `display` | `Rubik_900Black` | 56 | `tabular-nums` | Cronómetro |
+| `h1` | `Rubik_700Bold` | 28 | – | Títulos principales |
+| `h2` | `Rubik_700Bold` | 20 | – | Subtítulos |
+| `h3` | `PlusJakartaSans_600SemiBold` | 16 | – | Etiquetas fuertes |
+| `body` | `PlusJakartaSans_400Regular` | 14 | – | Lectura |
+| `button` | `PlusJakartaSans_600SemiBold` | 15 | `uppercase` | Botones |
+| `caption` | `PlusJakartaSans_500Medium` | 12 | – | Metadata |
+
+## Espaciado
+
+Acceso vía `theme.spacing(n)` = `n * 4px`. Usar siempre `theme.spacing(n)` en lugar de números mágicos.
+
+## Uso en componentes
+
+```tsx
+import { StyleSheet } from 'react-native';
+import { useUnistyles } from 'react-native-unistyles';
+
+// Opción 1: inline (para estilos únicos)
+function MyComponent() {
+  const { theme } = useUnistyles();
+  return (
+    <View style={{ backgroundColor: theme.colors.background }}>
+      <Text style={[theme.typography.presets.body, { color: theme.colors.text }]}>
+        Hola
+      </Text>
+    </View>
+  );
+}
+
+// Opción 2: StyleSheet.create con tema (para estilos reutilizables)
+const styles = StyleSheet.create((theme) => ({
+  container: {
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing(4),
+  },
+  title: {
+    ...theme.typography.presets.h2,
+    color: theme.colors.text,
+  },
+}));
+```
+
+## Reglas de estilizado
+
+- Los colores SOLO se modifican en `src/theme/index.ts`
+- La tipografía SOLO se modifica en `src/theme/typography.ts`
+- El espaciado SOLO se modifica en `src/theme/index.ts` (escala de 4)
+- Los componentes NUNCA hardcodean `color`, `fontSize`, `fontFamily`, `fontWeight` ni valores de padding/margin
+
+# Feature Architecture
+
+## Stack
+
+- `react-hook-form@7.80` + `@hookform/resolvers@5.4` + `zod@4.4`
+- Unistyles para estilos, expo-router para navegación
+
+## Estructura de una feature
+
+Cada feature vive en `src/features/<nombre>/` con esta estructura:
+
+```
+src/features/onboarding/
+├── constants/index.ts        → Opciones de chips, strings
+├── guards/useOnboardingGuard.ts  → Guard de navegación (redirect si no hay perfil)
+├── hooks/useOnboardingForm.ts    → Hook con lógica del formulario
+├── schemas/onboarding.ts         → Schema zod + tipo inferido
+└── screens/OnboardingScreen.tsx  → Screen con Controllers + UI
+```
+
+## Responsabilidades
+
+| Carpeta | Rol |
+|---|---|
+| `constants/` | Datos planos tipados (opciones, labels) |
+| `guards/` | Hooks que interceptan navegación (redirect condicional) |
+| `hooks/` | Lógica de feature reusable (formularios, fetching) |
+| `schemas/` | Schemas zod + tipos inferidos |
+| `screens/` | Componente de pantalla (solo Controllers + UI) |
+
+## Convenciones
+
+- **Route files** en `src/app/` solo re-exportan el screen: `export { default } from '@/features/.../screens/...'`
+- **Guard** se usa en el screen destino para redirect condicional (ej: home usa `useOnboardingGuard`)
+- **Hook** extrae `useForm`, submit, y conexión a BD. El screen no llama `useForm` directamente
+- **Schema** separa validación del screen: facilita reuso y testing
+- **Constants** evita magic strings/arrays dentro del screen
+- **zod v4**: usar `{ message: '...' }` en lugar de `invalid_type_error`/`required_error`; agregar `as const` en `z.enum()`
+- **Resolver**: `zodResolver(schema as any)` por incompatibilidad de tipos entre `zod/v4/classic` y `zod/v4/core`
+
+## Componentes compartidos
+
+En `src/components/`:
+
+| Componente | Props clave |
+|---|---|
+| `ScreenContainer` | `children` — KeyboardAvoidingView + ScrollView |
+| `InputField` | `label`, `value`, `onChangeText`, `keyboardType?`, `error?` |
+| `ChipSelector` | `label`, `options: ChipOption[]`, `selected`, `onSelect`, `error?` |
+| `Button` | `title`, `onPress`, `disabled?` |
+
+## Flujo de onboarding (referencia)
+
+1. `index.tsx` monta → `useOnboardingGuard()` ejecuta `userProfile.get()`
+2. Si no hay perfil → `router.replace('/onboarding')`
+3. `OnboardingScreen` renderiza con `useOnboardingForm()`
+4. Submit → `userProfile.upsert()` con `id=1` → `router.replace('/')`
+5. Al volver a home, `useOnboardingGuard` encuentra el perfil y renderiza
