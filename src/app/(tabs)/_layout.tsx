@@ -1,8 +1,10 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useUnistyles } from 'react-native-unistyles';
+import { useOnboardingGuard } from '@/features/onboarding/guards/useOnboardingGuard';
 
 export default function TabLayout() {
+    useOnboardingGuard();
     const { theme } = useUnistyles();
 
     return (
