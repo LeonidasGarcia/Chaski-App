@@ -1,16 +1,13 @@
 import { useEffect } from 'react';
-import { UnistylesRuntime } from 'react-native-unistyles';
 import { useDatabaseContext } from '@/context/DatabaseContext';
+import { applyThemePreference } from '@/lib/theme';
 
 export function useApplyThemePreference() {
     const { userProfile } = useDatabaseContext();
 
     useEffect(() => {
         userProfile.get().then((p) => {
-            if (p && p.theme_preference !== 'SYSTEM') {
-                UnistylesRuntime.setAdaptiveThemes(false);
-                UnistylesRuntime.setTheme(p.theme_preference.toLowerCase() as 'light' | 'dark');
-            }
+            if (p) applyThemePreference(p.theme_preference);
         });
     }, [userProfile]);
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { UnistylesRuntime } from 'react-native-unistyles';
 import { useDatabaseContext } from '@/context/DatabaseContext';
+import { applyThemePreference } from '@/lib/theme';
 import type { ThemePreference } from '@/types/database';
 
 export function useThemeToggle() {
@@ -16,13 +16,7 @@ export function useThemeToggle() {
     const updateTheme = (theme: ThemePreference) => {
         setPreference(theme);
         userProfile.updateTheme(theme);
-
-        if (theme === 'SYSTEM') {
-            UnistylesRuntime.setAdaptiveThemes(true);
-        } else {
-            UnistylesRuntime.setAdaptiveThemes(false);
-            UnistylesRuntime.setTheme(theme.toLowerCase() as 'light' | 'dark');
-        }
+        applyThemePreference(theme);
     };
 
     return { preference, updateTheme, loading: preference === null };
