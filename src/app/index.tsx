@@ -1,14 +1,20 @@
-import { Text, View } from 'react-native';
-import { useOnboardingGuard } from '@/features/onboarding/guards/useOnboardingGuard';
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import { useDatabaseContext } from '@/context/DatabaseContext';
 
 export default function HomeScreen() {
-    const { loading } = useOnboardingGuard();
+    const router = useRouter();
+    const { userProfile } = useDatabaseContext();
 
-    if (loading) return null;
+    useEffect(() => {
+        userProfile.get().then((profile) => {
+            if (!profile) {
+                router.replace('/onboarding');
+            } else {
+                router.replace('/(tabs)/profile');
+            }
+        });
+    }, [router, userProfile]);
 
-    return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text>Chaski-App</Text>
-        </View>
-    );
+    return null;
 }
