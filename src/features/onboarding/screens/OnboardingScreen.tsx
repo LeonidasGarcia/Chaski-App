@@ -1,6 +1,7 @@
 import { Controller } from 'react-hook-form';
 import ScreenContainer from '@/components/ScreenContainer';
 import InputField from '@/components/InputField';
+import NumericInputField from '@/components/NumericInputField';
 import ChipSelector from '@/components/ChipSelector';
 import Button from '@/components/Button';
 import { useOnboardingForm } from '../hooks/useOnboardingForm';
@@ -29,11 +30,10 @@ export default function OnboardingScreen() {
                 name="age"
                 control={control}
                 render={({ field: { onChange, value } }) => (
-                    <InputField
+                    <NumericInputField
                         label="Edad"
-                        value={value != null ? String(value) : ''}
-                        onChangeText={(text) => onChange(text ? Number(text) : undefined)}
-                        keyboardType="numeric"
+                        value={value}
+                        onChange={onChange}
                         placeholder="Tu edad"
                         error={errors.age?.message}
                     />
@@ -44,11 +44,10 @@ export default function OnboardingScreen() {
                 name="weight_kg"
                 control={control}
                 render={({ field: { onChange, value } }) => (
-                    <InputField
+                    <NumericInputField
                         label="Peso (kg)"
-                        value={value != null ? String(value) : ''}
-                        onChangeText={(text) => onChange(text ? Number(text) : undefined)}
-                        keyboardType="numeric"
+                        value={value}
+                        onChange={onChange}
                         placeholder="Tu peso"
                         error={errors.weight_kg?.message}
                     />
@@ -59,11 +58,10 @@ export default function OnboardingScreen() {
                 name="height_cm"
                 control={control}
                 render={({ field: { onChange, value } }) => (
-                    <InputField
+                    <NumericInputField
                         label="Altura (cm)"
-                        value={value != null ? String(value) : ''}
-                        onChangeText={(text) => onChange(text ? Number(text) : undefined)}
-                        keyboardType="numeric"
+                        value={value}
+                        onChange={onChange}
                         placeholder="Tu altura"
                         error={errors.height_cm?.message}
                     />
