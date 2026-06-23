@@ -1,7 +1,7 @@
 {
   "name": "chaski-app",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+  "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
     "@expo-google-fonts/rubik": "^0.4.2",
