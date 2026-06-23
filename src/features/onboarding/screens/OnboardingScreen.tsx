@@ -4,6 +4,8 @@ import InputField from '@/components/InputField';
 import NumericInputField from '@/components/NumericInputField';
 import ChipSelector from '@/components/ChipSelector';
 import Button from '@/components/Button';
+import { applyThemePreference } from '@/lib/theme';
+import type { ThemePreference } from '@/types/database';
 import { useOnboardingForm } from '../hooks/useOnboardingForm';
 import { GENDER_OPTIONS, THEME_OPTIONS } from '@/constants';
 
@@ -90,7 +92,10 @@ export default function OnboardingScreen() {
                         label="Tema"
                         options={THEME_OPTIONS}
                         selected={value}
-                        onSelect={onChange}
+                        onSelect={(v) => {
+                            onChange(v);
+                            applyThemePreference(v as ThemePreference);
+                        }}
                         error={errors.theme_preference?.message}
                     />
                 )}

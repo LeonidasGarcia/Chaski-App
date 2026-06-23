@@ -19,7 +19,6 @@ export function useProfileForm() {
         resolver: zodResolver(profileSchema as any),
         defaultValues: {
             name: '',
-            theme_preference: 'SYSTEM',
         },
     });
 
@@ -32,7 +31,6 @@ export function useProfileForm() {
                     weight_kg: p.weight_kg,
                     height_cm: p.height_cm,
                     gender: p.gender,
-                    theme_preference: p.theme_preference,
                 });
             }
             setLoading(false);
@@ -40,13 +38,14 @@ export function useProfileForm() {
     }, [reset, userProfile]);
 
     const onSubmit = handleSubmit(async (data: ProfileFormData) => {
+        const current = await userProfile.get();
         await userProfile.upsert({
             name: data.name,
             age: data.age,
             weight_kg: data.weight_kg,
             height_cm: data.height_cm,
             gender: data.gender,
-            theme_preference: data.theme_preference,
+            theme_preference: current?.theme_preference ?? 'SYSTEM',
             updated_at: new Date().toISOString(),
         });
         router.back();

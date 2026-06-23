@@ -18,7 +18,6 @@ export const profileSchema = z.object({
     gender: z.enum(['MALE', 'FEMALE', 'OTHER'] as const, {
         message: 'Selecciona un género',
     }),
-    theme_preference: z.enum(['LIGHT', 'DARK', 'SYSTEM'] as const).default('SYSTEM'),
 });
 
 export type ProfileFormData = z.infer<typeof profileSchema>;
