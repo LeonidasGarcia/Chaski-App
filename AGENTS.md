@@ -166,6 +166,17 @@ const styles = StyleSheet.create((theme) => ({
 - El espaciado SOLO se modifica en `src/theme/index.ts` (escala de 4)
 - Los componentes NUNCA hardcodean `color`, `fontSize`, `fontFamily`, `fontWeight` ni valores de padding/margin
 
+## Theme toggle
+
+- `adaptiveThemes: true` en `StyleSheet.configure()` en `src/theme/index.ts`
+- `src/lib/theme.ts` → `applyThemePreference(theme: ThemePreference)` función plana (no hook) que encapsula el toggle
+- Para cambiar a LIGHT/DARK: llamar `setAdaptiveThemes(false)` ANTES de `setTheme()`, o dará error
+- Para restaurar sistema: `setAdaptiveThemes(true)` (no llamar `setTheme()`)
+- Se usa desde:
+  - `onboarding` → al seleccionar tema en el formulario
+  - `settings/hooks/useThemeToggle` → al cambiar en Ajustes
+  - `settings/hooks/useApplyThemePreference` → al restaurar el tema guardado al montar tabs
+
 # Feature Architecture
 
 ## Stack
@@ -214,13 +225,55 @@ En `src/components/`:
 |---|---|
 | `ScreenContainer` | `children` — KeyboardAvoidingView + ScrollView |
 | `InputField` | `label`, `value`, `onChangeText`, `keyboardType?`, `error?` |
+| `NumericInputField` | `label`, `value`, `onChange`, `keyboardType?`, `error?` — usa string interno para permitir limpiar el input |
 | `ChipSelector` | `label`, `options: ChipOption[]`, `selected`, `onSelect`, `error?` |
 | `Button` | `title`, `onPress`, `disabled?` |
+| `SectionCard` | `title`, `children` — tarjeta con título y contenido |
+| `MetricRow` | `label`, `value` — fila label + valor para métricas |
 
-## Flujo de onboarding (referencia)
+## Features existentes
+
+### onboarding
+
+```
+src/features/onboarding/
+├── guards/useOnboardingGuard.ts       → Redirect si no hay perfil
+├── hooks/useOnboardingForm.ts         → useForm + submit con upsert
+├── schemas/onboarding.ts              → Schema zod con theme_preference
+└── screens/OnboardingScreen.tsx       → Formulario completo + applyThemePreference al seleccionar tema
+```
+
+#### Flujo
 
 1. `index.tsx` monta → `useOnboardingGuard()` ejecuta `userProfile.get()`
 2. Si no hay perfil → `router.replace('/onboarding')`
-3. `OnboardingScreen` renderiza con `useOnboardingForm()`
+3. `OnboardingScreen` renderiza con `useOnboardingForm()`. Tema se aplica visualmente al seleccionar via `applyThemePreference()`
 4. Submit → `userProfile.upsert()` con `id=1` → `router.replace('/')`
-5. Al volver a home, `useOnboardingGuard` encuentra el perfil y renderiza
+5. Al volver a home, `useOnboardingGuard` encuentra el perfil y redirige a `/(tabs)/profile`
+
+### profile
+
+```
+src/features/profile/
+├── hooks/useProfile.ts                → Fetch con useFocusEffect (refresca al enfocar)
+├── hooks/useProfileForm.ts            → useForm prepoblado + upsert preservando theme_preference actual
+├── schemas/profile.ts                 → Schema zod sin theme_preference
+└── screens/
+    ├── ProfileScreen.tsx               → Métricas de salud (IMC, FC, BMR, etc.)
+    └── EditProfileScreen.tsx           → Formulario de edición (sin selector de tema)
+```
+
+### settings
+
+```
+src/features/settings/
+├── hooks/useThemeToggle.ts              → Lee preferencia de BD + applyThemePreference
+├── hooks/useApplyThemePreference.ts     → Restaura tema guardado al montar tabs
+└── screens/SettingsScreen.tsx           → ChipSelector LIGHT/DARK/SYSTEM
+```
+
+#### Theme toggle desde settings
+
+- `useThemeToggle` lee `theme_preference` de BD, expone `updateTheme()` que persiste en BD + llama `applyThemePreference()`
+- `useApplyThemePreference` se ejecuta en `(tabs)/_layout.tsx` para restaurar el tema guardado al iniciar
+- El perfil de BD y el toggle de tema están separados: editar perfil NO modifica el tema
