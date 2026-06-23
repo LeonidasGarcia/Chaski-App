@@ -6,7 +6,7 @@ import InputField from '@/components/InputField';
 import NumericInputField from '@/components/NumericInputField';
 import ChipSelector from '@/components/ChipSelector';
 import Button from '@/components/Button';
-import { GENDER_OPTIONS, THEME_OPTIONS } from '@/constants';
+import { GENDER_OPTIONS } from '@/constants';
 import { useProfileForm } from '../hooks/useProfileForm';
 
 export default function EditProfileScreen() {
@@ -84,20 +84,6 @@ export default function EditProfileScreen() {
                             selected={value ?? ''}
                             onSelect={onChange}
                             error={errors.gender?.message}
-                        />
-                    )}
-                />
-
-                <Controller
-                    name="theme_preference"
-                    control={control}
-                    render={({ field: { onChange, value } }) => (
-                        <ChipSelector
-                            label="Tema"
-                            options={THEME_OPTIONS}
-                            selected={value}
-                            onSelect={onChange}
-                            error={errors.theme_preference?.message}
                         />
                     )}
                 />
