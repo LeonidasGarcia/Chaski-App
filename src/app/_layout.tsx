@@ -30,6 +30,7 @@ export default function RootLayout() {
         <DatabaseProvider>
             <Stack>
                 <Stack.Screen name="index" options={{ title: 'Home' }} />
+                <Stack.Screen name="onboarding" options={{ headerShown: false }} />
             </Stack>
         </DatabaseProvider>
     );
