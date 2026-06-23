@@ -1,9 +1,6 @@
-import { Text, View } from 'react-native';
+import { useOnboardingGuard } from '@/features/onboarding/guards/useOnboardingGuard';
 
 export default function HomeScreen() {
-    return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text>Chaski-App</Text>
-        </View>
-    );
+    useOnboardingGuard();
+    return null;
 }
