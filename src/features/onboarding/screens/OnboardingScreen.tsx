@@ -4,7 +4,7 @@ import InputField from '@/components/InputField';
 import ChipSelector from '@/components/ChipSelector';
 import Button from '@/components/Button';
 import { useOnboardingForm } from '../hooks/useOnboardingForm';
-import { GENDER_OPTIONS, THEME_OPTIONS } from '../constants';
+import { GENDER_OPTIONS, THEME_OPTIONS } from '@/constants';
 
 export default function OnboardingScreen() {
     const { control, errors, isSubmitting, onSubmit } = useOnboardingForm();
