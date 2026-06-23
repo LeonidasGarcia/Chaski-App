@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useUnistyles } from 'react-native-unistyles';
 import { useDatabaseContext } from '@/context/DatabaseContext';
 import type { UserProfileRepository } from '@/types/database';
@@ -33,12 +33,14 @@ export default function ProfileScreen() {
     const [profile, setProfile] = useState<UserProfileRepository | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        userProfile.get().then((p) => {
-            setProfile(p);
-            setLoading(false);
-        });
-    }, [userProfile]);
+    useFocusEffect(
+        useCallback(() => {
+            userProfile.get().then((p) => {
+                setProfile(p);
+                setLoading(false);
+            });
+        }, [userProfile]),
+    );
 
     if (loading || !profile) return null;
 
