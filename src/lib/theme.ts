@@ -4,15 +4,12 @@ import type { ThemePreference } from '@/types/database';
 import { bumpThemeVersion } from './themeVersion';
 
 export function applyThemePreference(theme: ThemePreference) {
-    console.log('[Theme] applyThemePreference:', theme);
     if (theme === 'SYSTEM') {
         const scheme = Appearance.getColorScheme();
         const systemTheme: 'light' | 'dark' = scheme === 'dark' ? 'dark' : 'light';
-        console.log('[Theme] system scheme:', systemTheme);
         UnistylesRuntime.setTheme(systemTheme);
     } else {
         UnistylesRuntime.setTheme(theme.toLowerCase() as 'light' | 'dark');
     }
-    console.log('[Theme] themeName after setTheme:', UnistylesRuntime.themeName);
     bumpThemeVersion();
 }

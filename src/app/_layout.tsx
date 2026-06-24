@@ -16,7 +16,6 @@ export default function RootLayout() {
     if (!initialized.current) {
         const scheme = Appearance.getColorScheme();
         const theme: 'light' | 'dark' = scheme === 'dark' ? 'dark' : 'light';
-        console.log('[Theme] RootLayout initial setTheme:', theme);
         UnistylesRuntime.setTheme(theme);
         initialized.current = true;
     }
