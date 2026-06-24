@@ -19,8 +19,9 @@ export function useApplyThemePreference() {
 
             if (p.theme_preference === 'SYSTEM') {
                 const subscription = Appearance.addChangeListener(({ colorScheme }) => {
-                    console.log('[Theme] system colorScheme changed to:', colorScheme);
-                    UnistylesRuntime.setTheme(colorScheme ?? 'light');
+                    const resolved: 'light' | 'dark' = colorScheme === 'dark' ? 'dark' : 'light';
+                    console.log('[Theme] system colorScheme changed to:', resolved);
+                    UnistylesRuntime.setTheme(resolved);
                     bumpThemeVersion();
                 });
                 return () => subscription.remove();

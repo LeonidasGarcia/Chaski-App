@@ -14,7 +14,8 @@ import { DatabaseProvider } from '@/context/DatabaseContext';
 export default function RootLayout() {
     const initialized = useRef(false);
     if (!initialized.current) {
-        const theme = Appearance.getColorScheme() ?? 'light';
+        const scheme = Appearance.getColorScheme();
+        const theme: 'light' | 'dark' = scheme === 'dark' ? 'dark' : 'light';
         console.log('[Theme] RootLayout initial setTheme:', theme);
         UnistylesRuntime.setTheme(theme);
         initialized.current = true;

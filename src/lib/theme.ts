@@ -6,7 +6,8 @@ import { bumpThemeVersion } from './themeVersion';
 export function applyThemePreference(theme: ThemePreference) {
     console.log('[Theme] applyThemePreference:', theme);
     if (theme === 'SYSTEM') {
-        const systemTheme = Appearance.getColorScheme() ?? 'light';
+        const scheme = Appearance.getColorScheme();
+        const systemTheme: 'light' | 'dark' = scheme === 'dark' ? 'dark' : 'light';
         console.log('[Theme] system scheme:', systemTheme);
         UnistylesRuntime.setTheme(systemTheme);
     } else {
