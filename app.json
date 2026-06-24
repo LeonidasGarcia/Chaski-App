@@ -36,7 +36,12 @@
       ],
       "expo-sqlite",
       "expo-font",
-      "expo-location"
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Chaski necesita tu ubicación para registrar tus rutas de running."
+        }
+      ]
     ]
   }
 }
