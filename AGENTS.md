@@ -168,10 +168,12 @@ const styles = StyleSheet.create((theme) => ({
 
 ## Theme toggle
 
-- `adaptiveThemes: true` en `StyleSheet.configure()` en `src/theme/index.ts`
+- `adaptiveThemes: false` en `StyleSheet.configure()` en `src/theme/index.ts`
 - `src/lib/theme.ts` → `applyThemePreference(theme: ThemePreference)` función plana (no hook) que encapsula el toggle
-- Para cambiar a LIGHT/DARK: llamar `setAdaptiveThemes(false)` ANTES de `setTheme()`, o dará error
-- Para restaurar sistema: `setAdaptiveThemes(true)` (no llamar `setTheme()`)
+- SYSTEM: lee `Appearance.getColorScheme()` y llama `setTheme()` directamente
+- LIGHT/DARK: llama `setTheme()` directamente
+- `useApplyThemePreference` en `(tabs)/_layout.tsx` también suscribe a `Appearance.addChangeListener` si el tema es SYSTEM
+- No se usa `setAdaptiveThemes()` para evitar race conditions nativas
 - Se usa desde:
   - `onboarding` → al seleccionar tema en el formulario
   - `settings/hooks/useThemeToggle` → al cambiar en Ajustes

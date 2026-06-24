@@ -1,5 +1,5 @@
 import { Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 interface ButtonProps {
     title: string;
@@ -8,7 +8,7 @@ interface ButtonProps {
 }
 
 export default function Button({ title, onPress, disabled }: ButtonProps) {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
 
     return (
         <TouchableOpacity

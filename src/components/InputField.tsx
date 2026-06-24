@@ -1,5 +1,5 @@
 import { Text, TextInput, View, StyleSheet } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 interface InputFieldProps {
     label: string;
@@ -18,7 +18,7 @@ export default function InputField({
     keyboardType = 'default',
     error,
 }: InputFieldProps) {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
 
     return (
         <View style={localStyles.container}>

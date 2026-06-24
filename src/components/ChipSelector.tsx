@@ -1,5 +1,5 @@
 import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 interface ChipOption {
     label: string;
@@ -21,7 +21,7 @@ export default function ChipSelector({
     onSelect,
     error,
 }: ChipSelectorProps) {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
 
     return (
         <View style={localStyles.container}>

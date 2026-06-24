@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Text, TextInput, View, StyleSheet } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 interface NumericInputFieldProps {
     label: string;
@@ -17,7 +17,7 @@ export default function NumericInputField({
     placeholder,
     error,
 }: NumericInputFieldProps) {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
     const [text, setText] = useState(value != null ? String(value) : '');
 
     const handleChangeText = (newText: string) => {

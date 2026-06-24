@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native-unistyles';
 import { typography } from './typography';
 
-const lightTheme = {
+export const lightTheme = {
     colors: {
         primary: '#19FA00',
         background: '#FFFFFF',
@@ -19,7 +19,7 @@ const lightTheme = {
     typography,
 };
 
-const darkTheme = {
+export const darkTheme = {
     colors: {
         primary: '#19FA00',
         background: '#000000',
@@ -58,7 +58,7 @@ declare module 'react-native-unistyles' {
 }
 
 StyleSheet.configure({
-    settings: { adaptiveThemes: true },
+    settings: { adaptiveThemes: false },
     breakpoints,
     themes: appThemes,
 });

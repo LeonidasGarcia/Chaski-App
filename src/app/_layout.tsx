@@ -1,6 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { Appearance } from 'react-native';
 import { Stack, SplashScreen } from 'expo-router';
 import { useFonts } from 'expo-font';
+import { UnistylesRuntime } from 'react-native-unistyles';
 import { Rubik_900Black, Rubik_700Bold } from '@expo-google-fonts/rubik';
 import {
     PlusJakartaSans_400Regular,
@@ -10,6 +12,14 @@ import {
 import { DatabaseProvider } from '@/context/DatabaseContext';
 
 export default function RootLayout() {
+    const initialized = useRef(false);
+    if (!initialized.current) {
+        const theme = Appearance.getColorScheme() ?? 'light';
+        console.log('[Theme] RootLayout initial setTheme:', theme);
+        UnistylesRuntime.setTheme(theme);
+        initialized.current = true;
+    }
+
     const [fontsLoaded] = useFonts({
         Rubik_900Black,
         Rubik_700Bold,

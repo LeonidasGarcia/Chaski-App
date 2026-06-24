@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { Text, View } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 interface SectionCardProps {
     children: ReactNode;
@@ -8,7 +8,7 @@ interface SectionCardProps {
 }
 
 export default function SectionCard({ children, title }: SectionCardProps) {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
 
     return (
         <View

@@ -1,5 +1,5 @@
 import { Text, View } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 interface MetricRowProps {
     label: string;
@@ -7,7 +7,7 @@ interface MetricRowProps {
 }
 
 export default function MetricRow({ label, value }: MetricRowProps) {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
 
     return (
         <View
