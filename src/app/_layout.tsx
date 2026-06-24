@@ -10,6 +10,7 @@ import {
     PlusJakartaSans_600SemiBold,
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { DatabaseProvider } from '@/context/DatabaseContext';
+import { ThemeVersionProvider } from '@/context/ThemeContext';
 
 export default function RootLayout() {
     const initialized = useRef(false);
@@ -37,12 +38,14 @@ export default function RootLayout() {
     if (!fontsLoaded) return null;
 
     return (
-        <DatabaseProvider>
+        <ThemeVersionProvider>
+            <DatabaseProvider>
             <Stack>
                 <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen name="onboarding" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             </Stack>
         </DatabaseProvider>
+        </ThemeVersionProvider>
     );
 }

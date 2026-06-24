@@ -1,7 +1,7 @@
 import { Appearance } from 'react-native';
 import { UnistylesRuntime } from 'react-native-unistyles';
 import type { ThemePreference } from '@/types/database';
-import { bumpThemeVersion } from './themeVersion';
+import { bumpThemeVersion } from '@/context/ThemeContext';
 
 export function applyThemePreference(theme: ThemePreference) {
     if (theme === 'SYSTEM') {

@@ -3,7 +3,7 @@ import { Appearance } from 'react-native';
 import { UnistylesRuntime } from 'react-native-unistyles';
 import { useDatabaseContext } from '@/context/DatabaseContext';
 import { applyThemePreference } from '@/lib/theme';
-import { bumpThemeVersion } from '@/lib/themeVersion';
+import { bumpThemeVersion } from '@/context/ThemeContext';
 
 export function useApplyThemePreference() {
     const { userProfile } = useDatabaseContext();
