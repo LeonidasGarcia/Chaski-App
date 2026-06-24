@@ -81,7 +81,7 @@ El inspector de BD se abre desde la terminal de Expo: Shift+M → Open expo-sqli
 
 ## Stack
 
-- `react-native-unistyles@3.2.5` con `useUnistyles` + `StyleSheet.create(theme => ...)`
+- `react-native-unistyles@3.2.5` para `StyleSheet.configure()`, `StyleSheet.create(theme => ...)` y `UnistylesRuntime.setTheme()`
 - `expo-font` con `@expo-google-fonts/rubik` y `@expo-google-fonts/plus-jakarta-sans`
 - **Regla**: ningún componente debe tener colores, tipografías o espaciados hardcodeados. Todo se lee del tema.
 
@@ -128,15 +128,15 @@ Acceso vía `theme.typography.presets.*`:
 
 Acceso vía `theme.spacing(n)` = `n * 4px`. Usar siempre `theme.spacing(n)` en lugar de números mágicos.
 
-## Uso en componentes
+## Acceso al tema
+
+**Importante:** `useUnistyles()` de Unistyles v3 tiene una proxy que no propaga cambios de tema. En su lugar, usamos un hook propio:
 
 ```tsx
-import { StyleSheet } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
-// Opción 1: inline (para estilos únicos)
 function MyComponent() {
-  const { theme } = useUnistyles();
+  const theme = useAppTheme();
   return (
     <View style={{ backgroundColor: theme.colors.background }}>
       <Text style={[theme.typography.presets.body, { color: theme.colors.text }]}>
@@ -145,19 +145,11 @@ function MyComponent() {
     </View>
   );
 }
-
-// Opción 2: StyleSheet.create con tema (para estilos reutilizables)
-const styles = StyleSheet.create((theme) => ({
-  container: {
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing(4),
-  },
-  title: {
-    ...theme.typography.presets.h2,
-    color: theme.colors.text,
-  },
-}));
 ```
+
+`useAppTheme()` lee `UnistylesRuntime.themeName` y retorna `lightTheme` o `darkTheme` (objetos planos, no proxies). El re-render se forza vía `ThemeContext` (ver sección abajo).
+
+`StyleSheet.create(theme => ...)` con el plugin babel de Unistyles sigue funcionando para estilos reutilizables.
 
 ## Reglas de estilizado
 
@@ -166,13 +158,26 @@ const styles = StyleSheet.create((theme) => ({
 - El espaciado SOLO se modifica en `src/theme/index.ts` (escala de 4)
 - Los componentes NUNCA hardcodean `color`, `fontSize`, `fontFamily`, `fontWeight` ni valores de padding/margin
 
+## ThemeContext
+
+`src/context/ThemeContext.tsx` — React Context que fuerza re-render global cuando cambia el tema:
+
+| Export | Tipo | Rol |
+|---|---|---|
+| `ThemeVersionProvider` | Componente | Provee `version` via context. Envuelve el app en `_layout.tsx` |
+| `useThemeVersion()` | Hook | Retorna `number` (contador de versión). Cada cambio incremeta → re-render |
+| `bumpThemeVersion()` | Función plana | Incrementa el contador. Usable desde código no-React |
+
+**Puente global:** `let _bump: (() => void) | null = null` se asigna al montar el Provider. `bumpThemeVersion()` lo llama con `_bump?.()`. Mismo patrón que `navigationRef`.
+
 ## Theme toggle
 
 - `adaptiveThemes: false` en `StyleSheet.configure()` en `src/theme/index.ts`
-- `src/lib/theme.ts` → `applyThemePreference(theme: ThemePreference)` función plana (no hook) que encapsula el toggle
-- SYSTEM: lee `Appearance.getColorScheme()` y llama `setTheme()` directamente
-- LIGHT/DARK: llama `setTheme()` directamente
-- `useApplyThemePreference` en `(tabs)/_layout.tsx` también suscribe a `Appearance.addChangeListener` si el tema es SYSTEM
+- `src/lib/theme.ts` → `applyThemePreference(theme: ThemePreference)` función plana (no hook) que encapsula el toggle. SYSTEM: lee `Appearance.getColorScheme()` y llama `setTheme()` directamente. LIGHT/DARK: llama `setTheme()` directamente. Finalmente llama `bumpThemeVersion()` desde `ThemeContext`.
+- `src/lib/useAppTheme.ts` → hook `useAppTheme()` que retorna tema fresco vía `getActiveTheme()`, forzando re-render con `useThemeVersion()`
+- `src/lib/theme.ts` → `applyThemePreference()` llama `bumpThemeVersion()` tras `setTheme()`
+- `useApplyThemePreference` en `(tabs)/_layout.tsx` restaura tema guardado al montar tabs, suscribe a `Appearance.addChangeListener` si SYSTEM
+- El listener de SYSTEM también llama `bumpThemeVersion()` tras `setTheme()`
 - No se usa `setAdaptiveThemes()` para evitar race conditions nativas
 - Se usa desde:
   - `onboarding` → al seleccionar tema en el formulario
