@@ -36,6 +36,19 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
+                name="run"
+                options={{
+                    title: 'Correr',
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <Ionicons
+                            name={focused ? 'map' : 'map-outline'}
+                            size={size}
+                            color={color}
+                        />
+                    ),
+                }}
+            />
+            <Tabs.Screen
                 name="settings"
                 options={{
                     title: 'Ajustes',

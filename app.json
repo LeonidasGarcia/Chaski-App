@@ -19,7 +19,11 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.ChaskiApp"
+      "package": "com.anonymous.ChaskiApp",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -42,6 +46,17 @@
           "locationWhenInUsePermission": "Chaski necesita tu ubicación para registrar tus rutas de running."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {
+        "headers": {
+          "Cross-Origin-Embedder-Policy": "credentialless",
+          "Cross-Origin-Opener-Policy": "same-origin"
+        }
+      },
+      "eas": {
+        "projectId": "e7671276-e1f7-4bdb-bdd8-46b2bc9be706"
+      }
+    }
   }
 }
