@@ -8,7 +8,7 @@ export function useCurrentPosition(): { latitude: number; longitude: number } | 
 
     useEffect(() => {
         const sub = Location.watchPositionAsync(
-            { accuracy: Location.Accuracy.Balanced, timeInterval: 5000 },
+            { accuracy: Location.Accuracy.High, timeInterval: 200, distanceInterval: 0 },
             (loc) => {
                 setPosition({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
             },
