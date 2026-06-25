@@ -23,6 +23,8 @@ interface UseRunTrackingReturn {
     isTracking: boolean;
     route: Coordinate[];
     elapsed: number;
+    distanceMeters: number;
+    speedKmh: number;
     start: () => void;
     stop: () => void;
     reset: () => void;
@@ -32,6 +34,8 @@ export function useRunTracking(): UseRunTrackingReturn {
     const [isTracking, setIsTracking] = useState(false);
     const [route, setRoute] = useState<Coordinate[]>([]);
     const [elapsed, setElapsed] = useState(0);
+    const [distanceMeters, setDistanceMeters] = useState(0);
+    const [speedKmh, setSpeedKmh] = useState(0);
     const watcherRef = useRef<Location.LocationSubscription | null>(null);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const lastCoordRef = useRef<Coordinate | null>(null);
@@ -53,6 +57,8 @@ export function useRunTracking(): UseRunTrackingReturn {
     const start = useCallback(async () => {
         setRoute([]);
         setElapsed(0);
+        setDistanceMeters(0);
+        setSpeedKmh(0);
         lastCoordRef.current = null;
         setIsTracking(true);
 
@@ -78,9 +84,13 @@ export function useRunTracking(): UseRunTrackingReturn {
                     if (dist > OUTLIER_THRESHOLD_METERS) {
                         return;
                     }
+                    setDistanceMeters((prev) => prev + dist);
                 }
 
+                const speed = loc.coords.speed !== null ? Math.round(loc.coords.speed * 3.6) : 0;
+
                 lastCoordRef.current = coord;
+                setSpeedKmh(speed);
                 setRoute((prev) => [...prev, coord]);
             },
         );
@@ -102,6 +112,8 @@ export function useRunTracking(): UseRunTrackingReturn {
         clearTimer();
         setRoute([]);
         setElapsed(0);
+        setDistanceMeters(0);
+        setSpeedKmh(0);
         lastCoordRef.current = null;
         setIsTracking(false);
     }, [clearWatcher, clearTimer]);
@@ -113,5 +125,5 @@ export function useRunTracking(): UseRunTrackingReturn {
         };
     }, [clearWatcher, clearTimer]);
 
-    return { isTracking, route, elapsed, start, stop, reset };
+    return { isTracking, route, elapsed, distanceMeters, speedKmh, start, stop, reset };
 }

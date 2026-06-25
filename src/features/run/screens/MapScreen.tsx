@@ -25,7 +25,7 @@ export default function MapScreen() {
     >(undefined);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const mapRef = useRef<MapView>(null);
-    const { isTracking, route, elapsed, start, stop } = useRunTracking();
+    const { isTracking, route, elapsed, distanceMeters, speedKmh, start, stop } = useRunTracking();
     const currentPosition = useCurrentPosition();
 
     useEffect(() => {
@@ -127,6 +127,7 @@ export default function MapScreen() {
                             borderRadius: 8,
                             paddingHorizontal: theme.spacing(2),
                             paddingVertical: theme.spacing(1),
+                            alignItems: 'center',
                             zIndex: 1,
                         }}
                     >
@@ -137,6 +138,22 @@ export default function MapScreen() {
                             ]}
                         >
                             {formatElapsed(elapsed)}
+                        </Text>
+                        <Text
+                            style={[
+                                theme.typography.presets.caption,
+                                { color: '#FFFFFF', marginTop: theme.spacing(0.5) },
+                            ]}
+                        >
+                            {(distanceMeters / 1000).toFixed(2)} km
+                        </Text>
+                        <Text
+                            style={[
+                                theme.typography.presets.caption,
+                                { color: '#FFFFFF' },
+                            ]}
+                        >
+                            {speedKmh} km/h
                         </Text>
                     </View>
                 )}
