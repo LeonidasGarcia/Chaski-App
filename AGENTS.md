@@ -19,6 +19,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before 
 - `src/lib/transformations.ts` → transformaciones entre raw y dominio
 - `src/context/DatabaseContext.tsx` → `DatabaseProvider` + `useDatabaseContext`
 - `src/app/_layout.tsx` → `DatabaseProvider` envuelve el `Stack`
+- **Importante:** El value del context debe envolverse en `useMemo([db])` para evitar re-renders innecesarios y efectos infinitos en consumidores
 
 ## Repositorios
 
@@ -97,8 +98,9 @@ El inspector de BD se abre desde la terminal de Expo: Shift+M → Open expo-sqli
 Acceso vía `theme.colors.*`:
 
 | Token | Light | Dark | Uso |
-|---|---|---|---|
+|---|---|---|---|---|
 | `primary` | `#19FA00` | `#19FA00` | Botones, acentos, display |
+| `onPrimary` | `#000000` | `#000000` | Texto sobre fondo primary |
 | `background` | `#FFFFFF` | `#000000` | Fondo de pantallas |
 | `surface` | `#F7F7F7` | `#0F0F0F` | Tarjetas, contenedores |
 | `surfaceSecondary` | `#F0F0F0` | `#1A1A1A` | Secondary cards |
@@ -108,6 +110,7 @@ Acceso vía `theme.colors.*`:
 | `border` | `#E6E6E6` | `#262626` | Bordes principales |
 | `borderSecondary` | `#D1D1D1` | `#333333` | Bordes secundarios |
 | `error` | `#DC2626` | `#FF5252` | Errores |
+| `onError` | `#FFFFFF` | `#FFFFFF` | Texto sobre fondo error |
 | `success` | `#16A34A` | `#22C55E` | Éxito |
 
 ## Tipografía
@@ -127,6 +130,17 @@ Acceso vía `theme.typography.presets.*`:
 ## Espaciado
 
 Acceso vía `theme.spacing(n)` = `n * 4px`. Usar siempre `theme.spacing(n)` en lugar de números mágicos.
+
+## Border Radius
+
+Acceso vía `theme.borderRadius.*`:
+
+| Token | Valor | Uso |
+|---|---|---|
+| `sm` | 8 | Overlays pequeños (timer en mapa) |
+| `md` | 12 | Inputs, botones, tarjetas |
+| `lg` | 20 | Botones redondos del mapa |
+| `xl` | 30 | Botón start/stop, permission gate |
 
 ## Acceso al tema
 
@@ -176,7 +190,7 @@ function MyComponent() {
 - `src/lib/theme.ts` → `applyThemePreference(theme: ThemePreference)` función plana (no hook) que encapsula el toggle. SYSTEM: lee `Appearance.getColorScheme()` y llama `setTheme()` directamente. LIGHT/DARK: llama `setTheme()` directamente. Finalmente llama `bumpThemeVersion()` desde `ThemeContext`.
 - `src/lib/useAppTheme.ts` → hook `useAppTheme()` que retorna tema fresco vía `getActiveTheme()`, forzando re-render con `useThemeVersion()`
 - `src/lib/theme.ts` → `applyThemePreference()` llama `bumpThemeVersion()` tras `setTheme()`
-- `useApplyThemePreference` en `(tabs)/_layout.tsx` restaura tema guardado al montar tabs, suscribe a `Appearance.addChangeListener` si SYSTEM
+- `useApplyThemePreference` en `(tabs)/_layout.tsx` restaura tema guardado al montar tabs. Usa `useRef` para subscription + `useThemeVersion()` como dependencia para re-evaluar cuando el usuario cambia preferencia. `initialRef` evita loop infinito con `bumpThemeVersion()`. No llamar `UnistylesRuntime.setTheme()` a nivel de módulo — causa `bad_optional_access`.
 - El listener de SYSTEM también llama `bumpThemeVersion()` tras `setTheme()`
 - No se usa `setAdaptiveThemes()` para evitar race conditions nativas
 - Se usa desde:
@@ -223,6 +237,10 @@ src/features/onboarding/
 - **Constants** evita magic strings/arrays dentro del screen
 - **zod v4**: usar `{ message: '...' }` en lugar de `invalid_type_error`/`required_error`; agregar `as const` en `z.enum()`
 - **Resolver**: `zodResolver(schema as any)` por incompatibilidad de tipos entre `zod/v4/classic` y `zod/v4/core`
+
+## Manejo de errores en promesas DB
+
+Siempre agregar `.catch(() => setLoading(false))` en promesas de BD dentro de hooks (`userProfile.get()`, etc.) para evitar estado `loading = true` eterno si la promesa rechaza.
 
 ## Componentes compartidos
 
