@@ -11,6 +11,7 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { DatabaseProvider } from '@/context/DatabaseContext';
 import { ThemeVersionProvider } from '@/context/ThemeContext';
+import LocationPermissionGate from '@/features/permissions/components/LocationPermissionGate';
 
 export default function RootLayout() {
     const initialized = useRef(false);
@@ -40,13 +41,15 @@ export default function RootLayout() {
     return (
         <ThemeVersionProvider>
             <DatabaseProvider>
-            <Stack>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="map" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
-            </Stack>
-        </DatabaseProvider>
+                <LocationPermissionGate>
+                <Stack>
+                    <Stack.Screen name="index" options={{ headerShown: false }} />
+                    <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen name="map" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
+                </Stack>
+                </LocationPermissionGate>
+            </DatabaseProvider>
         </ThemeVersionProvider>
     );
 }

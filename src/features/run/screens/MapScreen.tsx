@@ -23,18 +23,12 @@ export default function MapScreen() {
         | { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number }
         | undefined
     >(undefined);
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const mapRef = useRef<MapView>(null);
     const { isTracking, route, elapsed, distanceMeters, speedKmh, start, stop } = useRunTracking();
     const currentPosition = useCurrentPosition();
 
     useEffect(() => {
         (async () => {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                setErrorMsg('Permiso de ubicación denegado');
-                return;
-            }
             const loc = await Location.getCurrentPositionAsync({});
             setInitialRegion({
                 latitude: loc.coords.latitude,
@@ -45,20 +39,14 @@ export default function MapScreen() {
         })();
     }, []);
 
-    if (errorMsg) {
-        return (
-            <View
-                style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: theme.colors.background,
-                }}
-            >
-                <Text style={{ color: theme.colors.error }}>{errorMsg}</Text>
-            </View>
-        );
-    }
+    useEffect(() => {
+        if (currentPosition) {
+            mapRef.current?.animateCamera({
+                center: currentPosition,
+                zoom: 20,
+            });
+        }
+    }, [currentPosition]);
 
     return (
         <SafeScreenContainer edges={['top', 'bottom']}>
