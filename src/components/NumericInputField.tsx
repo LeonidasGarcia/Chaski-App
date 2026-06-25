@@ -21,6 +21,7 @@ export default function NumericInputField({
     const [text, setText] = useState(value != null ? String(value) : '');
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setText(value != null ? String(value) : '');
     }, [value]);
 
@@ -80,8 +81,7 @@ export default function NumericInputField({
 }
 
 const localStyles = StyleSheet.create({
-    container: {
-    },
+    container: {},
     input: {
         borderWidth: 1,
     },

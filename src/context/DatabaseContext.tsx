@@ -15,11 +15,14 @@ const DatabaseContext = createContext<DatabaseContextValue | null>(null);
 
 function DatabaseProviderInner({ children }: { children: ReactNode }) {
     const db = useSQLiteContext();
-    const value = useMemo<DatabaseContextValue>(() => ({
-        userProfile: createUserProfileRepository(db),
-        runs: createRunsRepository(db),
-        challenges: createChallengesRepository(db),
-    }), [db]);
+    const value = useMemo<DatabaseContextValue>(
+        () => ({
+            userProfile: createUserProfileRepository(db),
+            runs: createRunsRepository(db),
+            challenges: createChallengesRepository(db),
+        }),
+        [db],
+    );
     return <DatabaseContext.Provider value={value}>{children}</DatabaseContext.Provider>;
 }
 

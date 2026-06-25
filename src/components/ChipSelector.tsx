@@ -60,7 +60,9 @@ export default function ChipSelector({
                                 style={[
                                     theme.typography.presets.h3,
                                     {
-                                        color: isSelected ? theme.colors.onPrimary : theme.colors.text,
+                                        color: isSelected
+                                            ? theme.colors.onPrimary
+                                            : theme.colors.text,
                                     },
                                 ]}
                             >
@@ -85,8 +87,7 @@ export default function ChipSelector({
 }
 
 const localStyles = StyleSheet.create({
-    container: {
-    },
+    container: {},
     row: {
         flexDirection: 'row',
     },

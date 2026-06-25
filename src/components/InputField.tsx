@@ -64,8 +64,7 @@ export default function InputField({
 }
 
 const localStyles = StyleSheet.create({
-    container: {
-    },
+    container: {},
     input: {
         borderWidth: 1,
     },

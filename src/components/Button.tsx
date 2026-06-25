@@ -26,7 +26,10 @@ export default function Button({ title, onPress, disabled }: ButtonProps) {
             ]}
         >
             <Text
-                style={[theme.typography.presets.button, { color: theme.colors.onPrimary, textAlign: 'center' }]}
+                style={[
+                    theme.typography.presets.button,
+                    { color: theme.colors.onPrimary, textAlign: 'center' },
+                ]}
             >
                 {title}
             </Text>

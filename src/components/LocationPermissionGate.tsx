@@ -28,7 +28,11 @@ export default function LocationPermissionGate({ children }: Props) {
             <Text
                 style={[
                     theme.typography.presets.h1,
-                    { color: theme.colors.text, textAlign: 'center', marginBottom: theme.spacing(4) },
+                    {
+                        color: theme.colors.text,
+                        textAlign: 'center',
+                        marginBottom: theme.spacing(4),
+                    },
                 ]}
             >
                 Ubicación
@@ -55,12 +59,7 @@ export default function LocationPermissionGate({ children }: Props) {
                     paddingVertical: theme.spacing(3),
                 }}
             >
-                <Text
-                    style={[
-                        theme.typography.presets.button,
-                        { color: theme.colors.onPrimary },
-                    ]}
-                >
+                <Text style={[theme.typography.presets.button, { color: theme.colors.onPrimary }]}>
                     PERMITIR UBICACIÓN
                 </Text>
             </TouchableOpacity>

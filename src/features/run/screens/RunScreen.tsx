@@ -21,10 +21,7 @@ export default function RunScreen() {
                     >
                         Presiona el botón para abrir el mapa y comenzar tu ruta.
                     </Text>
-                    <Button
-                        title="Abrir mapa"
-                        onPress={() => router.push('/map')}
-                    />
+                    <Button title="Abrir mapa" onPress={() => router.push('/map')} />
                 </SectionCard>
             </View>
         </ScreenContainer>

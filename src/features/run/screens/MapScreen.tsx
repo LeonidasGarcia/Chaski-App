@@ -54,152 +54,48 @@ export default function MapScreen() {
     return (
         <SafeScreenContainer edges={['top', 'bottom']}>
             <LocationPermissionGate>
-            <View style={{ flex: 1 }}>
-                <MapView
-                    key={`map-${isDark ? 'dark' : 'light'}`}
-                    ref={mapRef}
-                    style={{ flex: 1 }}
-                    initialRegion={initialRegion}
-                    userInterfaceStyle={isDark ? 'dark' : 'light'}
-                    customMapStyle={MAP_STYLE}
-                    showsBuildings={false}
-                >
-                    {currentPosition && (
-                        <Marker
-                            coordinate={currentPosition}
-                            anchor={{ x: 0.5, y: 0.5 }}
-                        >
-                            <View
-                                style={{
-                                    width: 14,
-                                    height: 14,
-                                    borderRadius: 7,
-                                    backgroundColor: theme.colors.primary,
-                                    borderWidth: 2,
-                                    borderColor: '#FFFFFF', // excepción: borde blanco sobre mapa nativo
-                                }}
+                <View style={{ flex: 1 }}>
+                    <MapView
+                        key={`map-${isDark ? 'dark' : 'light'}`}
+                        ref={mapRef}
+                        style={{ flex: 1 }}
+                        initialRegion={initialRegion}
+                        userInterfaceStyle={isDark ? 'dark' : 'light'}
+                        customMapStyle={MAP_STYLE}
+                        showsBuildings={false}
+                    >
+                        {currentPosition && (
+                            <Marker coordinate={currentPosition} anchor={{ x: 0.5, y: 0.5 }}>
+                                <View
+                                    style={{
+                                        width: 14,
+                                        height: 14,
+                                        borderRadius: 7,
+                                        backgroundColor: theme.colors.primary,
+                                        borderWidth: 2,
+                                        borderColor: '#FFFFFF', // excepción: borde blanco sobre mapa nativo
+                                    }}
+                                />
+                            </Marker>
+                        )}
+                        {route.length > 1 && (
+                            <Polyline
+                                coordinates={route.map((c) => ({
+                                    latitude: c.latitude,
+                                    longitude: c.longitude,
+                                }))}
+                                strokeColor={theme.colors.primary}
+                                strokeWidth={4}
                             />
-                        </Marker>
-                    )}
-                    {route.length > 1 && (
-                        <Polyline
-                            coordinates={route.map((c) => ({
-                                latitude: c.latitude,
-                                longitude: c.longitude,
-                            }))}
-                            strokeColor={theme.colors.primary}
-                            strokeWidth={4}
-                        />
-                    )}
-                </MapView>
+                        )}
+                    </MapView>
 
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                    style={{
-                        position: 'absolute',
-                        top: theme.spacing(2),
-                        left: theme.spacing(4),
-                        width: 40,
-                        height: 40,
-                        borderRadius: theme.borderRadius.lg,
-                        backgroundColor: 'rgba(0,0,0,0.5)',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 1,
-                    }}
-                >
-                    <Ionicons name="arrow-back" size={22} color="#FFFFFF" />{/* excepción: icono sobre overlay rgba */}
-                </TouchableOpacity>
-
-                {isTracking && (
-                    <View
+                    <TouchableOpacity
+                        onPress={() => router.back()}
                         style={{
                             position: 'absolute',
                             top: theme.spacing(2),
-                            right: theme.spacing(4),
-                            backgroundColor: 'rgba(0,0,0,0.6)',
-                            borderRadius: theme.borderRadius.sm,
-                            paddingHorizontal: theme.spacing(2),
-                            paddingVertical: theme.spacing(1),
-                            alignItems: 'center',
-                            zIndex: 1,
-                        }}
-                    >
-                        <Text
-                            style={[
-                                theme.typography.presets.h1,
-                                { color: '#FFFFFF' }, // excepción: texto sobre overlay rgba
-                            ]}
-                        >
-                            {formatElapsed(elapsed)}
-                        </Text>
-                        <Text
-                            style={[
-                                theme.typography.presets.caption,
-                                { color: '#FFFFFF', marginTop: theme.spacing(0.5) }, // excepción: texto sobre overlay rgba
-                            ]}
-                        >
-                            {(distanceMeters / 1000).toFixed(2)} km
-                        </Text>
-                        <Text
-                            style={[
-                                theme.typography.presets.caption,
-                                { color: '#FFFFFF' }, // excepción: texto sobre overlay rgba
-                            ]}
-                        >
-                            {speedKmh} km/h
-                        </Text>
-                    </View>
-                )}
-
-                <View
-                    style={{
-                        position: 'absolute',
-                        bottom: theme.spacing(8),
-                        left: 0,
-                        right: 0,
-                        alignItems: 'center',
-                        zIndex: 1,
-                    }}
-                >
-                    <TouchableOpacity
-                        onPress={isTracking ? stop : start}
-                        activeOpacity={0.8}
-                        style={{
-                            backgroundColor: isTracking ? theme.colors.error : theme.colors.primary,
-                            borderRadius: theme.borderRadius.xl,
-                            paddingHorizontal: theme.spacing(8),
-                            paddingVertical: theme.spacing(3),
-                        }}
-                    >
-                        <Text
-                            style={[
-                                theme.typography.presets.button,
-                                {
-                                    color: isTracking ? theme.colors.onError : theme.colors.onPrimary,
-                                },
-                            ]}
-                        >
-                            {isTracking ? 'DETENER' : 'COMENZAR'}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-
-                {currentPosition && (
-                    <TouchableOpacity
-                        onPress={() =>
-                            mapRef.current?.animateCamera({
-                                center: {
-                                    latitude: currentPosition.latitude,
-                                    longitude: currentPosition.longitude,
-                                },
-                                zoom: 20,
-                            })
-                        }
-                        style={{
-                            position: 'absolute',
-                            bottom: theme.spacing(16),
-                            right: theme.spacing(4),
+                            left: theme.spacing(4),
                             width: 40,
                             height: 40,
                             borderRadius: theme.borderRadius.lg,
@@ -209,10 +105,117 @@ export default function MapScreen() {
                             zIndex: 1,
                         }}
                     >
-                        <Ionicons name="locate" size={22} color="#FFFFFF" />{/* excepción: icono sobre overlay rgba */}
+                        <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+                        {/* excepción: icono sobre overlay rgba */}
                     </TouchableOpacity>
-                )}
-            </View>
+
+                    {isTracking && (
+                        <View
+                            style={{
+                                position: 'absolute',
+                                top: theme.spacing(2),
+                                right: theme.spacing(4),
+                                backgroundColor: 'rgba(0,0,0,0.6)',
+                                borderRadius: theme.borderRadius.sm,
+                                paddingHorizontal: theme.spacing(2),
+                                paddingVertical: theme.spacing(1),
+                                alignItems: 'center',
+                                zIndex: 1,
+                            }}
+                        >
+                            <Text
+                                style={[
+                                    theme.typography.presets.h1,
+                                    { color: '#FFFFFF' }, // excepción: texto sobre overlay rgba
+                                ]}
+                            >
+                                {formatElapsed(elapsed)}
+                            </Text>
+                            <Text
+                                style={[
+                                    theme.typography.presets.caption,
+                                    { color: '#FFFFFF', marginTop: theme.spacing(0.5) }, // excepción: texto sobre overlay rgba
+                                ]}
+                            >
+                                {(distanceMeters / 1000).toFixed(2)} km
+                            </Text>
+                            <Text
+                                style={[
+                                    theme.typography.presets.caption,
+                                    { color: '#FFFFFF' }, // excepción: texto sobre overlay rgba
+                                ]}
+                            >
+                                {speedKmh} km/h
+                            </Text>
+                        </View>
+                    )}
+
+                    <View
+                        style={{
+                            position: 'absolute',
+                            bottom: theme.spacing(8),
+                            left: 0,
+                            right: 0,
+                            alignItems: 'center',
+                            zIndex: 1,
+                        }}
+                    >
+                        <TouchableOpacity
+                            onPress={isTracking ? stop : start}
+                            activeOpacity={0.8}
+                            style={{
+                                backgroundColor: isTracking
+                                    ? theme.colors.error
+                                    : theme.colors.primary,
+                                borderRadius: theme.borderRadius.xl,
+                                paddingHorizontal: theme.spacing(8),
+                                paddingVertical: theme.spacing(3),
+                            }}
+                        >
+                            <Text
+                                style={[
+                                    theme.typography.presets.button,
+                                    {
+                                        color: isTracking
+                                            ? theme.colors.onError
+                                            : theme.colors.onPrimary,
+                                    },
+                                ]}
+                            >
+                                {isTracking ? 'DETENER' : 'COMENZAR'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {currentPosition && (
+                        <TouchableOpacity
+                            onPress={() =>
+                                mapRef.current?.animateCamera({
+                                    center: {
+                                        latitude: currentPosition.latitude,
+                                        longitude: currentPosition.longitude,
+                                    },
+                                    zoom: 20,
+                                })
+                            }
+                            style={{
+                                position: 'absolute',
+                                bottom: theme.spacing(16),
+                                right: theme.spacing(4),
+                                width: 40,
+                                height: 40,
+                                borderRadius: theme.borderRadius.lg,
+                                backgroundColor: 'rgba(0,0,0,0.5)',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                zIndex: 1,
+                            }}
+                        >
+                            <Ionicons name="locate" size={22} color="#FFFFFF" />
+                            {/* excepción: icono sobre overlay rgba */}
+                        </TouchableOpacity>
+                    )}
+                </View>
             </LocationPermissionGate>
         </SafeScreenContainer>
     );

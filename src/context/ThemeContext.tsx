@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+    type ReactNode,
+} from 'react';
 
 interface ThemeVersionContextValue {
     version: number;
@@ -26,13 +34,11 @@ export function ThemeVersionProvider({ children }: { children: ReactNode }) {
         setVersion((v) => v + 1);
     }, []);
 
-    _bump = bump;
+    useEffect(() => {
+        _bump = bump;
+    }, [bump]);
 
     const value = useMemo(() => ({ version, bump }), [version, bump]);
 
-    return (
-        <ThemeVersionContext.Provider value={value}>
-            {children}
-        </ThemeVersionContext.Provider>
-    );
+    return <ThemeVersionContext.Provider value={value}>{children}</ThemeVersionContext.Provider>;
 }
