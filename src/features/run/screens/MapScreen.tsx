@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import MapView from 'react-native-maps';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { useAppTheme } from '@/lib/useAppTheme';
 
 export default function MapScreen() {
     const theme = useAppTheme();
+    const router = useRouter();
     const [location, setLocation] = useState<Location.LocationObject | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -46,6 +49,23 @@ export default function MapScreen() {
                         : undefined
                 }
             />
+            <TouchableOpacity
+                onPress={() => router.back()}
+                style={{
+                    position: 'absolute',
+                    top: theme.spacing(6),
+                    left: theme.spacing(4),
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1,
+                }}
+            >
+                <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
         </View>
     );
 }
