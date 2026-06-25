@@ -60,7 +60,7 @@ export function useRunTracking(): UseRunTrackingReturn {
             {
                 timeInterval: 1000,
                 distanceInterval: MIN_DISTANCE_METERS,
-                accuracy: Location.Accuracy.High,
+                accuracy: Location.Accuracy.BestForNavigation,
             },
             (loc) => {
                 const coord: Coordinate = {
