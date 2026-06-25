@@ -22,7 +22,8 @@
             "package": "com.anonymous.ChaskiApp",
             "permissions": [
                 "android.permission.ACCESS_COARSE_LOCATION",
-                "android.permission.ACCESS_FINE_LOCATION"
+                "android.permission.ACCESS_FINE_LOCATION",
+                "android.permission.ACCESS_BACKGROUND_LOCATION"
             ]
         },
         "web": {
@@ -40,6 +41,7 @@
             ],
             "expo-sqlite",
             "expo-font",
+            "expo-task-manager",
             [
                 "expo-location",
                 {
