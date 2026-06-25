@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { useAppTheme } from '@/lib/useAppTheme';
 import SafeScreenContainer from '@/components/SafeScreenContainer';
+import { UnistylesRuntime } from 'react-native-unistyles';
 import { useRunTracking } from '../hooks/useRunTracking';
 import { useCurrentPosition } from '../hooks/useCurrentPosition';
 import LocationPermissionGate from '@/features/permissions/components/LocationPermissionGate';
@@ -27,6 +28,7 @@ export default function MapScreen() {
     const mapRef = useRef<MapView>(null);
     const { isTracking, route, elapsed, distanceMeters, speedKmh, start, stop } = useRunTracking();
     const currentPosition = useCurrentPosition();
+    const isDark = UnistylesRuntime.themeName === 'dark';
 
     useEffect(() => {
         (async () => {
@@ -54,9 +56,11 @@ export default function MapScreen() {
             <LocationPermissionGate>
             <View style={{ flex: 1 }}>
                 <MapView
+                    key={`map-${isDark ? 'dark' : 'light'}`}
                     ref={mapRef}
                     style={{ flex: 1 }}
                     initialRegion={initialRegion}
+                    userInterfaceStyle={isDark ? 'dark' : 'light'}
                     customMapStyle={MAP_STYLE}
                     showsBuildings={false}
                 >

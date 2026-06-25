@@ -8,6 +8,4 @@ export const MAP_STYLE: MapStyleElement[] = [
     { featureType: 'road.arterial', elementType: 'labels', stylers: [{ visibility: 'off' }] },
     { featureType: 'road.highway', elementType: 'labels', stylers: [{ visibility: 'off' }] },
     { featureType: 'landscape.natural.terrain', stylers: [{ visibility: 'off' }] },
-    { featureType: 'water', stylers: [{ color: '#1a1a2e' }] },
-    { featureType: 'landscape', stylers: [{ color: '#2d2d44' }] },
 ];
