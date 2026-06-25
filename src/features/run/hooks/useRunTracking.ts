@@ -4,7 +4,7 @@ import type { Coordinate } from '@/types/domain';
 
 const OUTLIER_THRESHOLD_METERS = 80;
 const MAX_ACCURACY_METERS = 25;
-const MIN_DISTANCE_METERS = 10;
+const MIN_DISTANCE_METERS = 3;
 
 function haversine(a: Coordinate, b: Coordinate): number {
     const R = 6_371_000;
@@ -59,8 +59,8 @@ export function useRunTracking(): UseRunTrackingReturn {
         const watcher = await Location.watchPositionAsync(
             {
                 timeInterval: 1000,
-                distanceInterval: MIN_DISTANCE_METERS,
-                accuracy: Location.Accuracy.BestForNavigation,
+                distanceInterval: 0,
+                accuracy: Location.Accuracy.High,
             },
             (loc) => {
                 const coord: Coordinate = {
