@@ -1,13 +1,13 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useUnistyles } from 'react-native-unistyles';
 import { useOnboardingGuard } from '@/features/onboarding/guards/useOnboardingGuard';
 import { useApplyThemePreference } from '@/features/settings/hooks/useApplyThemePreference';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 export default function TabLayout() {
     useOnboardingGuard();
     useApplyThemePreference();
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
 
     return (
         <Tabs
@@ -29,6 +29,19 @@ export default function TabLayout() {
                     tabBarIcon: ({ color, size, focused }) => (
                         <Ionicons
                             name={focused ? 'person' : 'person-outline'}
+                            size={size}
+                            color={color}
+                        />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="run"
+                options={{
+                    title: 'Correr',
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <Ionicons
+                            name={focused ? 'map' : 'map-outline'}
                             size={size}
                             color={color}
                         />

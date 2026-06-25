@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { useAppTheme } from '@/lib/useAppTheme';
 
-export default function ProfileLayout() {
+export default function RunLayout() {
     const theme = useAppTheme();
 
     return (
@@ -12,8 +12,7 @@ export default function ProfileLayout() {
                 headerTitleStyle: theme.typography.presets.h3,
             }}
         >
-            <Stack.Screen name="index" options={{ title: 'Perfil' }} />
-            <Stack.Screen name="edit" options={{ title: 'Editar perfil' }} />
+            <Stack.Screen name="index" options={{ title: 'Correr' }} />
         </Stack>
     );
 }

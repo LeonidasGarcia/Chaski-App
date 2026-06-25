@@ -10,10 +10,13 @@ export function useProfile() {
 
     useFocusEffect(
         useCallback(() => {
-            userProfile.get().then((p) => {
-                setProfile(p);
-                setLoading(false);
-            });
+            userProfile
+                .get()
+                .then((p) => {
+                    setProfile(p);
+                    setLoading(false);
+                })
+                .catch(() => setLoading(false));
         }, [userProfile]),
     );
 

@@ -1,13 +1,13 @@
 import { type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 interface ScreenContainerProps {
     children: ReactNode;
 }
 
 export default function ScreenContainer({ children }: ScreenContainerProps) {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
 
     return (
         <KeyboardAvoidingView

@@ -1,9 +1,10 @@
 import { StyleSheet } from 'react-native-unistyles';
 import { typography } from './typography';
 
-const lightTheme = {
+export const lightTheme = {
     colors: {
         primary: '#19FA00',
+        onPrimary: '#000000',
         background: '#FFFFFF',
         surface: '#F7F7F7',
         surfaceSecondary: '#F0F0F0',
@@ -13,15 +14,23 @@ const lightTheme = {
         border: '#E6E6E6',
         borderSecondary: '#D1D1D1',
         error: '#DC2626',
+        onError: '#FFFFFF',
         success: '#16A34A',
     },
     spacing: (v: number) => v * 4,
+    borderRadius: {
+        sm: 8,
+        md: 12,
+        lg: 20,
+        xl: 30,
+    },
     typography,
 };
 
-const darkTheme = {
+export const darkTheme = {
     colors: {
         primary: '#19FA00',
+        onPrimary: '#000000',
         background: '#000000',
         surface: '#0F0F0F',
         surfaceSecondary: '#1A1A1A',
@@ -31,9 +40,16 @@ const darkTheme = {
         border: '#262626',
         borderSecondary: '#333333',
         error: '#FF5252',
+        onError: '#FFFFFF',
         success: '#22C55E',
     },
     spacing: (v: number) => v * 4,
+    borderRadius: {
+        sm: 8,
+        md: 12,
+        lg: 20,
+        xl: 30,
+    },
     typography,
 };
 
@@ -58,7 +74,7 @@ declare module 'react-native-unistyles' {
 }
 
 StyleSheet.configure({
-    settings: { adaptiveThemes: true },
+    settings: { adaptiveThemes: false },
     breakpoints,
     themes: appThemes,
 });

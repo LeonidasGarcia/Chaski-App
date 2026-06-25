@@ -1,10 +1,10 @@
 import { ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useUnistyles } from 'react-native-unistyles';
 import Button from '@/components/Button';
 import SectionCard from '@/components/SectionCard';
 import MetricRow from '@/components/MetricRow';
 import { useProfile } from '../hooks/useProfile';
+import { useAppTheme } from '@/lib/useAppTheme';
 import {
     calculateBMI,
     getBMICategory,
@@ -25,7 +25,7 @@ const GENDER_LABELS: Record<string, string> = {
 };
 
 export default function ProfileScreen() {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
     const router = useRouter();
     const { profile, loading } = useProfile();
 

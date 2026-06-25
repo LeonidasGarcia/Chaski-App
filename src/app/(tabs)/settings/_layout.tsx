@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 export default function SettingsLayout() {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
 
     return (
         <Stack

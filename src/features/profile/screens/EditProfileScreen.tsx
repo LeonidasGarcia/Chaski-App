@@ -1,6 +1,5 @@
 import { Controller } from 'react-hook-form';
 import { View } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
 import ScreenContainer from '@/components/ScreenContainer';
 import InputField from '@/components/InputField';
 import NumericInputField from '@/components/NumericInputField';
@@ -8,9 +7,10 @@ import ChipSelector from '@/components/ChipSelector';
 import Button from '@/components/Button';
 import { GENDER_OPTIONS } from '@/constants';
 import { useProfileForm } from '../hooks/useProfileForm';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 export default function EditProfileScreen() {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
     const { control, errors, isSubmitting, loading, onSubmit } = useProfileForm();
 
     if (loading) return null;

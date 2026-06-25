@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Text, TextInput, View, StyleSheet } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 interface NumericInputFieldProps {
     label: string;
@@ -17,8 +17,13 @@ export default function NumericInputField({
     placeholder,
     error,
 }: NumericInputFieldProps) {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
     const [text, setText] = useState(value != null ? String(value) : '');
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setText(value != null ? String(value) : '');
+    }, [value]);
 
     const handleChangeText = (newText: string) => {
         setText(newText);
@@ -33,7 +38,7 @@ export default function NumericInputField({
     };
 
     return (
-        <View style={localStyles.container}>
+        <View style={[localStyles.container, { marginBottom: theme.spacing(4) }]}>
             <Text
                 style={[
                     theme.typography.presets.h3,
@@ -54,10 +59,10 @@ export default function NumericInputField({
                         color: theme.colors.text,
                         backgroundColor: theme.colors.surface,
                         borderColor: error ? theme.colors.error : theme.colors.border,
-                        borderRadius: 12,
+                        borderRadius: theme.borderRadius.md,
                         paddingHorizontal: theme.spacing(3),
                         paddingVertical: theme.spacing(3),
-                        fontSize: 16,
+                        ...theme.typography.presets.body,
                     },
                 ]}
             />
@@ -76,9 +81,7 @@ export default function NumericInputField({
 }
 
 const localStyles = StyleSheet.create({
-    container: {
-        marginBottom: 16,
-    },
+    container: {},
     input: {
         borderWidth: 1,
     },

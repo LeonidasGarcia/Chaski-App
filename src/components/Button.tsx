@@ -1,5 +1,5 @@
 import { Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 interface ButtonProps {
     title: string;
@@ -8,7 +8,7 @@ interface ButtonProps {
 }
 
 export default function Button({ title, onPress, disabled }: ButtonProps) {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
 
     return (
         <TouchableOpacity
@@ -20,13 +20,16 @@ export default function Button({ title, onPress, disabled }: ButtonProps) {
                 {
                     backgroundColor: theme.colors.primary,
                     opacity: disabled ? 0.5 : 1,
-                    borderRadius: 12,
+                    borderRadius: theme.borderRadius.md,
                     paddingVertical: theme.spacing(3.5),
                 },
             ]}
         >
             <Text
-                style={[theme.typography.presets.button, { color: '#000000', textAlign: 'center' }]}
+                style={[
+                    theme.typography.presets.button,
+                    { color: theme.colors.onPrimary, textAlign: 'center' },
+                ]}
             >
                 {title}
             </Text>

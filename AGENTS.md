@@ -19,6 +19,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before 
 - `src/lib/transformations.ts` → transformaciones entre raw y dominio
 - `src/context/DatabaseContext.tsx` → `DatabaseProvider` + `useDatabaseContext`
 - `src/app/_layout.tsx` → `DatabaseProvider` envuelve el `Stack`
+- **Importante:** El value del context debe envolverse en `useMemo([db])` para evitar re-renders innecesarios y efectos infinitos en consumidores
 
 ## Repositorios
 
@@ -81,7 +82,7 @@ El inspector de BD se abre desde la terminal de Expo: Shift+M → Open expo-sqli
 
 ## Stack
 
-- `react-native-unistyles@3.2.5` con `useUnistyles` + `StyleSheet.create(theme => ...)`
+- `react-native-unistyles@3.2.5` para `StyleSheet.configure()`, `StyleSheet.create(theme => ...)` y `UnistylesRuntime.setTheme()`
 - `expo-font` con `@expo-google-fonts/rubik` y `@expo-google-fonts/plus-jakarta-sans`
 - **Regla**: ningún componente debe tener colores, tipografías o espaciados hardcodeados. Todo se lee del tema.
 
@@ -97,8 +98,9 @@ El inspector de BD se abre desde la terminal de Expo: Shift+M → Open expo-sqli
 Acceso vía `theme.colors.*`:
 
 | Token | Light | Dark | Uso |
-|---|---|---|---|
+|---|---|---|---|---|
 | `primary` | `#19FA00` | `#19FA00` | Botones, acentos, display |
+| `onPrimary` | `#000000` | `#000000` | Texto sobre fondo primary |
 | `background` | `#FFFFFF` | `#000000` | Fondo de pantallas |
 | `surface` | `#F7F7F7` | `#0F0F0F` | Tarjetas, contenedores |
 | `surfaceSecondary` | `#F0F0F0` | `#1A1A1A` | Secondary cards |
@@ -108,6 +110,7 @@ Acceso vía `theme.colors.*`:
 | `border` | `#E6E6E6` | `#262626` | Bordes principales |
 | `borderSecondary` | `#D1D1D1` | `#333333` | Bordes secundarios |
 | `error` | `#DC2626` | `#FF5252` | Errores |
+| `onError` | `#FFFFFF` | `#FFFFFF` | Texto sobre fondo error |
 | `success` | `#16A34A` | `#22C55E` | Éxito |
 
 ## Tipografía
@@ -128,15 +131,26 @@ Acceso vía `theme.typography.presets.*`:
 
 Acceso vía `theme.spacing(n)` = `n * 4px`. Usar siempre `theme.spacing(n)` en lugar de números mágicos.
 
-## Uso en componentes
+## Border Radius
+
+Acceso vía `theme.borderRadius.*`:
+
+| Token | Valor | Uso |
+|---|---|---|
+| `sm` | 8 | Overlays pequeños (timer en mapa) |
+| `md` | 12 | Inputs, botones, tarjetas |
+| `lg` | 20 | Botones redondos del mapa |
+| `xl` | 30 | Botón start/stop, permission gate |
+
+## Acceso al tema
+
+**Importante:** `useUnistyles()` de Unistyles v3 tiene una proxy que no propaga cambios de tema. En su lugar, usamos un hook propio:
 
 ```tsx
-import { StyleSheet } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
-// Opción 1: inline (para estilos únicos)
 function MyComponent() {
-  const { theme } = useUnistyles();
+  const theme = useAppTheme();
   return (
     <View style={{ backgroundColor: theme.colors.background }}>
       <Text style={[theme.typography.presets.body, { color: theme.colors.text }]}>
@@ -145,19 +159,11 @@ function MyComponent() {
     </View>
   );
 }
-
-// Opción 2: StyleSheet.create con tema (para estilos reutilizables)
-const styles = StyleSheet.create((theme) => ({
-  container: {
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing(4),
-  },
-  title: {
-    ...theme.typography.presets.h2,
-    color: theme.colors.text,
-  },
-}));
 ```
+
+`useAppTheme()` lee `UnistylesRuntime.themeName` y retorna `lightTheme` o `darkTheme` (objetos planos, no proxies). El re-render se forza vía `ThemeContext` (ver sección abajo).
+
+`StyleSheet.create(theme => ...)` con el plugin babel de Unistyles sigue funcionando para estilos reutilizables.
 
 ## Reglas de estilizado
 
@@ -166,12 +172,27 @@ const styles = StyleSheet.create((theme) => ({
 - El espaciado SOLO se modifica en `src/theme/index.ts` (escala de 4)
 - Los componentes NUNCA hardcodean `color`, `fontSize`, `fontFamily`, `fontWeight` ni valores de padding/margin
 
+## ThemeContext
+
+`src/context/ThemeContext.tsx` — React Context que fuerza re-render global cuando cambia el tema:
+
+| Export | Tipo | Rol |
+|---|---|---|
+| `ThemeVersionProvider` | Componente | Provee `version` via context. Envuelve el app en `_layout.tsx` |
+| `useThemeVersion()` | Hook | Retorna `number` (contador de versión). Cada cambio incremeta → re-render |
+| `bumpThemeVersion()` | Función plana | Incrementa el contador. Usable desde código no-React |
+
+**Puente global:** `let _bump: (() => void) | null = null` se asigna al montar el Provider. `bumpThemeVersion()` lo llama con `_bump?.()`. Mismo patrón que `navigationRef`.
+
 ## Theme toggle
 
-- `adaptiveThemes: true` en `StyleSheet.configure()` en `src/theme/index.ts`
-- `src/lib/theme.ts` → `applyThemePreference(theme: ThemePreference)` función plana (no hook) que encapsula el toggle
-- Para cambiar a LIGHT/DARK: llamar `setAdaptiveThemes(false)` ANTES de `setTheme()`, o dará error
-- Para restaurar sistema: `setAdaptiveThemes(true)` (no llamar `setTheme()`)
+- `adaptiveThemes: false` en `StyleSheet.configure()` en `src/theme/index.ts`
+- `src/lib/theme.ts` → `applyThemePreference(theme: ThemePreference)` función plana (no hook) que encapsula el toggle. SYSTEM: lee `Appearance.getColorScheme()` y llama `setTheme()` directamente. LIGHT/DARK: llama `setTheme()` directamente. Finalmente llama `bumpThemeVersion()` desde `ThemeContext`.
+- `src/lib/useAppTheme.ts` → hook `useAppTheme()` que retorna tema fresco vía `getActiveTheme()`, forzando re-render con `useThemeVersion()`
+- `src/lib/theme.ts` → `applyThemePreference()` llama `bumpThemeVersion()` tras `setTheme()`
+- `useApplyThemePreference` en `(tabs)/_layout.tsx` restaura tema guardado al montar tabs. Usa `useRef` para subscription + `useThemeVersion()` como dependencia para re-evaluar cuando el usuario cambia preferencia. `initialRef` evita loop infinito con `bumpThemeVersion()`. No llamar `UnistylesRuntime.setTheme()` a nivel de módulo — causa `bad_optional_access`.
+- El listener de SYSTEM también llama `bumpThemeVersion()` tras `setTheme()`
+- No se usa `setAdaptiveThemes()` para evitar race conditions nativas
 - Se usa desde:
   - `onboarding` → al seleccionar tema en el formulario
   - `settings/hooks/useThemeToggle` → al cambiar en Ajustes
@@ -216,6 +237,10 @@ src/features/onboarding/
 - **Constants** evita magic strings/arrays dentro del screen
 - **zod v4**: usar `{ message: '...' }` en lugar de `invalid_type_error`/`required_error`; agregar `as const` en `z.enum()`
 - **Resolver**: `zodResolver(schema as any)` por incompatibilidad de tipos entre `zod/v4/classic` y `zod/v4/core`
+
+## Manejo de errores en promesas DB
+
+Siempre agregar `.catch(() => setLoading(false))` en promesas de BD dentro de hooks (`userProfile.get()`, etc.) para evitar estado `loading = true` eterno si la promesa rechaza.
 
 ## Componentes compartidos
 
@@ -277,3 +302,9 @@ src/features/settings/
 - `useThemeToggle` lee `theme_preference` de BD, expone `updateTheme()` que persiste en BD + llama `applyThemePreference()`
 - `useApplyThemePreference` se ejecuta en `(tabs)/_layout.tsx` para restaurar el tema guardado al iniciar
 - El perfil de BD y el toggle de tema están separados: editar perfil NO modifica el tema
+
+### Excepciones documentadas
+
+- `MapScreen.tsx`: tres usos de `rgba(0,0,0,0.5)` y `rgba(0,0,0,0.6)` en overlays sobre el mapa nativo (back button, timer, locate button). La transparencia es necesaria para no bloquear la vista del mapa. No hay tokens de tema equivalentes.
+- `MapScreen.tsx`: `color: '#FFFFFF'` en textos e iconos sobre esos overlays rgba (back arrow, timer/distance/speed, locate icon). Están atados a los overlays y no tienen token de tema.
+- `MapScreen.tsx`: `borderColor: '#FFFFFF'` en el marker verde. Es un borde blanco sobre el mapa nativo para contraste visual. No hay token de tema equivalente.

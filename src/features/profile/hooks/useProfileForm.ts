@@ -23,18 +23,21 @@ export function useProfileForm() {
     });
 
     useEffect(() => {
-        userProfile.get().then((p) => {
-            if (p) {
-                reset({
-                    name: p.name,
-                    age: p.age,
-                    weight_kg: p.weight_kg,
-                    height_cm: p.height_cm,
-                    gender: p.gender,
-                });
-            }
-            setLoading(false);
-        });
+        userProfile
+            .get()
+            .then((p) => {
+                if (p) {
+                    reset({
+                        name: p.name,
+                        age: p.age,
+                        weight_kg: p.weight_kg,
+                        height_cm: p.height_cm,
+                        gender: p.gender,
+                    });
+                }
+                setLoading(false);
+            })
+            .catch(() => setLoading(false));
     }, [reset, userProfile]);
 
     const onSubmit = handleSubmit(async (data: ProfileFormData) => {

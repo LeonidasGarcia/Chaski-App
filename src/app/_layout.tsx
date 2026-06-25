@@ -1,6 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { Appearance } from 'react-native';
 import { Stack, SplashScreen } from 'expo-router';
 import { useFonts } from 'expo-font';
+import { UnistylesRuntime } from 'react-native-unistyles';
 import { Rubik_900Black, Rubik_700Bold } from '@expo-google-fonts/rubik';
 import {
     PlusJakartaSans_400Regular,
@@ -8,8 +10,19 @@ import {
     PlusJakartaSans_600SemiBold,
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { DatabaseProvider } from '@/context/DatabaseContext';
+import { ThemeVersionProvider } from '@/context/ThemeContext';
+import LocationPermissionGate from '@/components/LocationPermissionGate';
 
 export default function RootLayout() {
+    const initialized = useRef(false);
+    // eslint-disable-next-line react-hooks/refs
+    if (!initialized.current) {
+        const scheme = Appearance.getColorScheme();
+        const theme: 'light' | 'dark' = scheme === 'dark' ? 'dark' : 'light';
+        UnistylesRuntime.setTheme(theme);
+        initialized.current = true;
+    }
+
     const [fontsLoaded] = useFonts({
         Rubik_900Black,
         Rubik_700Bold,
@@ -27,12 +40,20 @@ export default function RootLayout() {
     if (!fontsLoaded) return null;
 
     return (
-        <DatabaseProvider>
-            <Stack>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            </Stack>
-        </DatabaseProvider>
+        <ThemeVersionProvider>
+            <DatabaseProvider>
+                <LocationPermissionGate>
+                    <Stack>
+                        <Stack.Screen name="index" options={{ headerShown: false }} />
+                        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                        <Stack.Screen
+                            name="map"
+                            options={{ headerShown: false, presentation: 'fullScreenModal' }}
+                        />
+                    </Stack>
+                </LocationPermissionGate>
+            </DatabaseProvider>
+        </ThemeVersionProvider>
     );
 }

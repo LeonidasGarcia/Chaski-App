@@ -1,5 +1,5 @@
 import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 interface ChipOption {
     label: string;
@@ -21,10 +21,10 @@ export default function ChipSelector({
     onSelect,
     error,
 }: ChipSelectorProps) {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
 
     return (
-        <View style={localStyles.container}>
+        <View style={[localStyles.container, { marginBottom: theme.spacing(4) }]}>
             <Text
                 style={[
                     theme.typography.presets.h3,
@@ -33,7 +33,7 @@ export default function ChipSelector({
             >
                 {label}
             </Text>
-            <View style={localStyles.row}>
+            <View style={[localStyles.row, { gap: theme.spacing(2) }]}>
                 {options.map((option) => {
                     const isSelected = option.value === selected;
                     return (
@@ -50,7 +50,7 @@ export default function ChipSelector({
                                         error && !isSelected
                                             ? theme.colors.error
                                             : theme.colors.border,
-                                    borderRadius: 12,
+                                    borderRadius: theme.borderRadius.md,
                                     paddingHorizontal: theme.spacing(3),
                                     paddingVertical: theme.spacing(2),
                                 },
@@ -58,10 +58,11 @@ export default function ChipSelector({
                         >
                             <Text
                                 style={[
-                                    theme.typography.presets.body,
+                                    theme.typography.presets.h3,
                                     {
-                                        color: isSelected ? '#000000' : theme.colors.text,
-                                        fontWeight: '600',
+                                        color: isSelected
+                                            ? theme.colors.onPrimary
+                                            : theme.colors.text,
                                     },
                                 ]}
                             >
@@ -86,12 +87,9 @@ export default function ChipSelector({
 }
 
 const localStyles = StyleSheet.create({
-    container: {
-        marginBottom: 16,
-    },
+    container: {},
     row: {
         flexDirection: 'row',
-        gap: 8,
     },
     chip: {
         borderWidth: 1,

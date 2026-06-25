@@ -1,13 +1,13 @@
 import { View } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
 import ScreenContainer from '@/components/ScreenContainer';
 import SectionCard from '@/components/SectionCard';
 import ChipSelector from '@/components/ChipSelector';
 import { THEME_OPTIONS } from '@/constants';
 import { useThemeToggle } from '../hooks/useThemeToggle';
+import { useAppTheme } from '@/lib/useAppTheme';
 
 export default function SettingsScreen() {
-    const { theme } = useUnistyles();
+    const theme = useAppTheme();
     const { preference, updateTheme, loading } = useThemeToggle();
 
     if (loading || !preference) return null;
