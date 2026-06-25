@@ -8,6 +8,7 @@ import { useAppTheme } from '@/lib/useAppTheme';
 import SafeScreenContainer from '@/components/SafeScreenContainer';
 import { useRunTracking } from '../hooks/useRunTracking';
 import { useCurrentPosition } from '../hooks/useCurrentPosition';
+import LocationPermissionGate from '@/features/permissions/components/LocationPermissionGate';
 import { MAP_STYLE } from '../constants/mapStyle';
 
 function formatElapsed(seconds: number): string {
@@ -50,6 +51,7 @@ export default function MapScreen() {
 
     return (
         <SafeScreenContainer edges={['top', 'bottom']}>
+            <LocationPermissionGate>
             <View style={{ flex: 1 }}>
                 <MapView
                     ref={mapRef}
@@ -208,6 +210,7 @@ export default function MapScreen() {
                     </TouchableOpacity>
                 )}
             </View>
+            </LocationPermissionGate>
         </SafeScreenContainer>
     );
 }
