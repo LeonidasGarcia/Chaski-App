@@ -20,13 +20,13 @@ export default function Button({ title, onPress, disabled }: ButtonProps) {
                 {
                     backgroundColor: theme.colors.primary,
                     opacity: disabled ? 0.5 : 1,
-                    borderRadius: 12,
+                    borderRadius: theme.borderRadius.md,
                     paddingVertical: theme.spacing(3.5),
                 },
             ]}
         >
             <Text
-                style={[theme.typography.presets.button, { color: '#000000', textAlign: 'center' }]}
+                style={[theme.typography.presets.button, { color: theme.colors.onPrimary, textAlign: 'center' }]}
             >
                 {title}
             </Text>

@@ -9,7 +9,7 @@ import SafeScreenContainer from '@/components/SafeScreenContainer';
 import { UnistylesRuntime } from 'react-native-unistyles';
 import { useRunTracking } from '../hooks/useRunTracking';
 import { useCurrentPosition } from '../hooks/useCurrentPosition';
-import LocationPermissionGate from '@/features/permissions/components/LocationPermissionGate';
+import LocationPermissionGate from '@/components/LocationPermissionGate';
 import { MAP_STYLE } from '../constants/mapStyle';
 
 function formatElapsed(seconds: number): string {
@@ -74,9 +74,9 @@ export default function MapScreen() {
                                     width: 14,
                                     height: 14,
                                     borderRadius: 7,
-                                    backgroundColor: '#19FA00',
+                                    backgroundColor: theme.colors.primary,
                                     borderWidth: 2,
-                                    borderColor: '#FFFFFF',
+                                    borderColor: '#FFFFFF', // excepción: borde blanco sobre mapa nativo
                                 }}
                             />
                         </Marker>
@@ -87,7 +87,7 @@ export default function MapScreen() {
                                 latitude: c.latitude,
                                 longitude: c.longitude,
                             }))}
-                            strokeColor="#19FA00"
+                            strokeColor={theme.colors.primary}
                             strokeWidth={4}
                         />
                     )}
@@ -101,14 +101,14 @@ export default function MapScreen() {
                         left: theme.spacing(4),
                         width: 40,
                         height: 40,
-                        borderRadius: 20,
+                        borderRadius: theme.borderRadius.lg,
                         backgroundColor: 'rgba(0,0,0,0.5)',
                         justifyContent: 'center',
                         alignItems: 'center',
                         zIndex: 1,
                     }}
                 >
-                    <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+                    <Ionicons name="arrow-back" size={22} color="#FFFFFF" />{/* excepción: icono sobre overlay rgba */}
                 </TouchableOpacity>
 
                 {isTracking && (
@@ -118,7 +118,7 @@ export default function MapScreen() {
                             top: theme.spacing(2),
                             right: theme.spacing(4),
                             backgroundColor: 'rgba(0,0,0,0.6)',
-                            borderRadius: 8,
+                            borderRadius: theme.borderRadius.sm,
                             paddingHorizontal: theme.spacing(2),
                             paddingVertical: theme.spacing(1),
                             alignItems: 'center',
@@ -127,8 +127,8 @@ export default function MapScreen() {
                     >
                         <Text
                             style={[
-                                theme.typography.presets.display,
-                                { color: '#FFFFFF', fontSize: 28 },
+                                theme.typography.presets.h1,
+                                { color: '#FFFFFF' }, // excepción: texto sobre overlay rgba
                             ]}
                         >
                             {formatElapsed(elapsed)}
@@ -136,7 +136,7 @@ export default function MapScreen() {
                         <Text
                             style={[
                                 theme.typography.presets.caption,
-                                { color: '#FFFFFF', marginTop: theme.spacing(0.5) },
+                                { color: '#FFFFFF', marginTop: theme.spacing(0.5) }, // excepción: texto sobre overlay rgba
                             ]}
                         >
                             {(distanceMeters / 1000).toFixed(2)} km
@@ -144,7 +144,7 @@ export default function MapScreen() {
                         <Text
                             style={[
                                 theme.typography.presets.caption,
-                                { color: '#FFFFFF' },
+                                { color: '#FFFFFF' }, // excepción: texto sobre overlay rgba
                             ]}
                         >
                             {speedKmh} km/h
@@ -167,7 +167,7 @@ export default function MapScreen() {
                         activeOpacity={0.8}
                         style={{
                             backgroundColor: isTracking ? theme.colors.error : theme.colors.primary,
-                            borderRadius: 30,
+                            borderRadius: theme.borderRadius.xl,
                             paddingHorizontal: theme.spacing(8),
                             paddingVertical: theme.spacing(3),
                         }}
@@ -176,8 +176,7 @@ export default function MapScreen() {
                             style={[
                                 theme.typography.presets.button,
                                 {
-                                    color: isTracking ? '#FFFFFF' : '#000000',
-                                    textTransform: 'uppercase',
+                                    color: isTracking ? theme.colors.onError : theme.colors.onPrimary,
                                 },
                             ]}
                         >
@@ -203,14 +202,14 @@ export default function MapScreen() {
                             right: theme.spacing(4),
                             width: 40,
                             height: 40,
-                            borderRadius: 20,
+                            borderRadius: theme.borderRadius.lg,
                             backgroundColor: 'rgba(0,0,0,0.5)',
                             justifyContent: 'center',
                             alignItems: 'center',
                             zIndex: 1,
                         }}
                     >
-                        <Ionicons name="locate" size={22} color="#FFFFFF" />
+                        <Ionicons name="locate" size={22} color="#FFFFFF" />{/* excepción: icono sobre overlay rgba */}
                     </TouchableOpacity>
                 )}
             </View>

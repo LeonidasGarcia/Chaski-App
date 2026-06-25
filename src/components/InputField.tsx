@@ -21,7 +21,7 @@ export default function InputField({
     const theme = useAppTheme();
 
     return (
-        <View style={localStyles.container}>
+        <View style={[localStyles.container, { marginBottom: theme.spacing(4) }]}>
             <Text
                 style={[
                     theme.typography.presets.h3,
@@ -42,10 +42,10 @@ export default function InputField({
                         color: theme.colors.text,
                         backgroundColor: theme.colors.surface,
                         borderColor: error ? theme.colors.error : theme.colors.border,
-                        borderRadius: 12,
+                        borderRadius: theme.borderRadius.md,
                         paddingHorizontal: theme.spacing(3),
                         paddingVertical: theme.spacing(3),
-                        fontSize: 16,
+                        ...theme.typography.presets.body,
                     },
                 ]}
             />
@@ -65,7 +65,6 @@ export default function InputField({
 
 const localStyles = StyleSheet.create({
     container: {
-        marginBottom: 16,
     },
     input: {
         borderWidth: 1,

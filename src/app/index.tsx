@@ -1,6 +1,1 @@
-import { useOnboardingGuard } from '@/features/onboarding/guards/useOnboardingGuard';
-
-export default function HomeScreen() {
-    useOnboardingGuard();
-    return null;
-}
+export { default } from '@/features/onboarding/screens/HomeScreen';

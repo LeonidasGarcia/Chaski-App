@@ -284,3 +284,9 @@ src/features/settings/
 - `useThemeToggle` lee `theme_preference` de BD, expone `updateTheme()` que persiste en BD + llama `applyThemePreference()`
 - `useApplyThemePreference` se ejecuta en `(tabs)/_layout.tsx` para restaurar el tema guardado al iniciar
 - El perfil de BD y el toggle de tema están separados: editar perfil NO modifica el tema
+
+### Excepciones documentadas
+
+- `MapScreen.tsx`: tres usos de `rgba(0,0,0,0.5)` y `rgba(0,0,0,0.6)` en overlays sobre el mapa nativo (back button, timer, locate button). La transparencia es necesaria para no bloquear la vista del mapa. No hay tokens de tema equivalentes.
+- `MapScreen.tsx`: `color: '#FFFFFF'` en textos e iconos sobre esos overlays rgba (back arrow, timer/distance/speed, locate icon). Están atados a los overlays y no tienen token de tema.
+- `MapScreen.tsx`: `borderColor: '#FFFFFF'` en el marker verde. Es un borde blanco sobre el mapa nativo para contraste visual. No hay token de tema equivalente.

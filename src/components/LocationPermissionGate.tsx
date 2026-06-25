@@ -50,7 +50,7 @@ export default function LocationPermissionGate({ children }: Props) {
                 activeOpacity={0.8}
                 style={{
                     backgroundColor: theme.colors.primary,
-                    borderRadius: 30,
+                    borderRadius: theme.borderRadius.xl,
                     paddingHorizontal: theme.spacing(8),
                     paddingVertical: theme.spacing(3),
                 }}
@@ -58,7 +58,7 @@ export default function LocationPermissionGate({ children }: Props) {
                 <Text
                     style={[
                         theme.typography.presets.button,
-                        { color: '#000000' },
+                        { color: theme.colors.onPrimary },
                     ]}
                 >
                     PERMITIR UBICACIÓN

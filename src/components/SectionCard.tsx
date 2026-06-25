@@ -17,7 +17,7 @@ export default function SectionCard({ children, title }: SectionCardProps) {
                 marginHorizontal: theme.spacing(4),
                 marginBottom: theme.spacing(3),
                 padding: theme.spacing(4),
-                borderRadius: 12,
+                borderRadius: theme.borderRadius.md,
             }}
         >
             {title ? (

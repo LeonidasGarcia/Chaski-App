@@ -11,7 +11,7 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { DatabaseProvider } from '@/context/DatabaseContext';
 import { ThemeVersionProvider } from '@/context/ThemeContext';
-import LocationPermissionGate from '@/features/permissions/components/LocationPermissionGate';
+import LocationPermissionGate from '@/components/LocationPermissionGate';
 
 export default function RootLayout() {
     const initialized = useRef(false);
