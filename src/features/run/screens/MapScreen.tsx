@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +24,7 @@ export default function MapScreen() {
         | undefined
     >(undefined);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const mapRef = useRef<MapView>(null);
     const { isTracking, route, elapsed, start, stop } = useRunTracking();
     const currentPosition = useCurrentPosition();
 
@@ -38,8 +39,8 @@ export default function MapScreen() {
             setInitialRegion({
                 latitude: loc.coords.latitude,
                 longitude: loc.coords.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
+                latitudeDelta: 0.001,
+                longitudeDelta: 0.001,
             });
         })();
     }, []);
@@ -63,6 +64,7 @@ export default function MapScreen() {
         <SafeScreenContainer edges={['top', 'bottom']}>
             <View style={{ flex: 1 }}>
                 <MapView
+                    ref={mapRef}
                     style={{ flex: 1 }}
                     initialRegion={initialRegion}
                     customMapStyle={MAP_STYLE}
@@ -172,6 +174,34 @@ export default function MapScreen() {
                         </Text>
                     </TouchableOpacity>
                 </View>
+
+                {currentPosition && (
+                    <TouchableOpacity
+                        onPress={() =>
+                            mapRef.current?.animateCamera({
+                                center: {
+                                    latitude: currentPosition.latitude,
+                                    longitude: currentPosition.longitude,
+                                },
+                                zoom: 20,
+                            })
+                        }
+                        style={{
+                            position: 'absolute',
+                            bottom: theme.spacing(16),
+                            right: theme.spacing(4),
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            zIndex: 1,
+                        }}
+                    >
+                        <Ionicons name="locate" size={22} color="#FFFFFF" />
+                    </TouchableOpacity>
+                )}
             </View>
         </SafeScreenContainer>
     );
