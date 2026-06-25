@@ -1,17 +1,28 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { Polyline } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { useAppTheme } from '@/lib/useAppTheme';
 import SafeScreenContainer from '@/components/SafeScreenContainer';
+import { useRunTracking } from '../hooks/useRunTracking';
+
+function formatElapsed(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
 
 export default function MapScreen() {
     const theme = useAppTheme();
     const router = useRouter();
-    const [location, setLocation] = useState<Location.LocationObject | null>(null);
+    const [initialRegion, setInitialRegion] = useState<
+        | { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number }
+        | undefined
+    >(undefined);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const { isTracking, route, elapsed, start, stop } = useRunTracking();
 
     useEffect(() => {
         (async () => {
@@ -21,13 +32,25 @@ export default function MapScreen() {
                 return;
             }
             const loc = await Location.getCurrentPositionAsync({});
-            setLocation(loc);
+            setInitialRegion({
+                latitude: loc.coords.latitude,
+                longitude: loc.coords.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+            });
         })();
     }, []);
 
     if (errorMsg) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+            <View
+                style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: theme.colors.background,
+                }}
+            >
                 <Text style={{ color: theme.colors.error }}>{errorMsg}</Text>
             </View>
         );
@@ -40,17 +63,20 @@ export default function MapScreen() {
                     style={{ flex: 1 }}
                     showsUserLocation
                     followsUserLocation
-                    initialRegion={
-                        location
-                            ? {
-                                  latitude: location.coords.latitude,
-                                  longitude: location.coords.longitude,
-                                  latitudeDelta: 0.01,
-                                  longitudeDelta: 0.01,
-                              }
-                            : undefined
-                    }
-                />
+                    initialRegion={initialRegion}
+                >
+                    {route.length > 1 && (
+                        <Polyline
+                            coordinates={route.map((c) => ({
+                                latitude: c.latitude,
+                                longitude: c.longitude,
+                            }))}
+                            strokeColor="#19FA00"
+                            strokeWidth={4}
+                        />
+                    )}
+                </MapView>
+
                 <TouchableOpacity
                     onPress={() => router.back()}
                     style={{
@@ -68,6 +94,64 @@ export default function MapScreen() {
                 >
                     <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
                 </TouchableOpacity>
+
+                {isTracking && (
+                    <View
+                        style={{
+                            position: 'absolute',
+                            top: theme.spacing(2),
+                            right: theme.spacing(4),
+                            backgroundColor: 'rgba(0,0,0,0.6)',
+                            borderRadius: 8,
+                            paddingHorizontal: theme.spacing(2),
+                            paddingVertical: theme.spacing(1),
+                            zIndex: 1,
+                        }}
+                    >
+                        <Text
+                            style={[
+                                theme.typography.presets.display,
+                                { color: '#FFFFFF', fontSize: 28 },
+                            ]}
+                        >
+                            {formatElapsed(elapsed)}
+                        </Text>
+                    </View>
+                )}
+
+                <View
+                    style={{
+                        position: 'absolute',
+                        bottom: theme.spacing(8),
+                        left: 0,
+                        right: 0,
+                        alignItems: 'center',
+                        zIndex: 1,
+                    }}
+                >
+                    <TouchableOpacity
+                        onPress={isTracking ? stop : start}
+                        activeOpacity={0.8}
+                        style={{
+                            backgroundColor: isTracking ? theme.colors.error : theme.colors.primary,
+                            borderRadius: 30,
+                            paddingHorizontal: theme.spacing(8),
+                            paddingVertical: theme.spacing(3),
+                        }}
+                    >
+                        <Text
+                            style={[
+                                theme.typography.presets.button,
+                                {
+                                    color: isTracking ? '#FFFFFF' : '#000000',
+                                    textTransform: 'uppercase',
+                                },
+                            ]}
+                        >
+                            {isTracking ? 'DETENER' : 'COMENZAR'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </SafeScreenContainer>
     );
