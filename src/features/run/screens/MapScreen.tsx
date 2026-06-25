@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import MapView, { Polyline } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { useAppTheme } from '@/lib/useAppTheme';
 import SafeScreenContainer from '@/components/SafeScreenContainer';
 import { useRunTracking } from '../hooks/useRunTracking';
+import { useCurrentPosition } from '../hooks/useCurrentPosition';
 import { MAP_STYLE } from '../constants/mapStyle';
 
 function formatElapsed(seconds: number): string {
@@ -24,6 +25,7 @@ export default function MapScreen() {
     >(undefined);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const { isTracking, route, elapsed, start, stop } = useRunTracking();
+    const currentPosition = useCurrentPosition();
 
     useEffect(() => {
         (async () => {
@@ -62,12 +64,27 @@ export default function MapScreen() {
             <View style={{ flex: 1 }}>
                 <MapView
                     style={{ flex: 1 }}
-                    showsUserLocation
-                    followsUserLocation
                     initialRegion={initialRegion}
                     customMapStyle={MAP_STYLE}
                     showsBuildings={false}
                 >
+                    {currentPosition && (
+                        <Marker
+                            coordinate={currentPosition}
+                            anchor={{ x: 0.5, y: 0.5 }}
+                        >
+                            <View
+                                style={{
+                                    width: 14,
+                                    height: 14,
+                                    borderRadius: 7,
+                                    backgroundColor: '#19FA00',
+                                    borderWidth: 2,
+                                    borderColor: '#FFFFFF',
+                                }}
+                            />
+                        </Marker>
+                    )}
                     {route.length > 1 && (
                         <Polyline
                             coordinates={route.map((c) => ({
