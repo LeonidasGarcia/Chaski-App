@@ -34,7 +34,7 @@ export function useProfileForm() {
                 });
             }
             setLoading(false);
-        });
+        }).catch(() => setLoading(false));
     }, [reset, userProfile]);
 
     const onSubmit = handleSubmit(async (data: ProfileFormData) => {

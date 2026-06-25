@@ -13,7 +13,7 @@ export function useProfile() {
             userProfile.get().then((p) => {
                 setProfile(p);
                 setLoading(false);
-            });
+            }).catch(() => setLoading(false));
         }, [userProfile]),
     );
 
