@@ -12,7 +12,7 @@ export default function RunLayout() {
                 headerTitleStyle: theme.typography.presets.h3,
             }}
         >
-            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="index" options={{ title: 'Correr' }} />
         </Stack>
     );
 }
