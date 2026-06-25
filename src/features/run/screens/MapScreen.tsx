@@ -7,6 +7,7 @@ import * as Location from 'expo-location';
 import { useAppTheme } from '@/lib/useAppTheme';
 import SafeScreenContainer from '@/components/SafeScreenContainer';
 import { useRunTracking } from '../hooks/useRunTracking';
+import { MAP_STYLE } from '../constants/mapStyle';
 
 function formatElapsed(seconds: number): string {
     const m = Math.floor(seconds / 60);
@@ -64,6 +65,8 @@ export default function MapScreen() {
                     showsUserLocation
                     followsUserLocation
                     initialRegion={initialRegion}
+                    customMapStyle={MAP_STYLE}
+                    showsBuildings={false}
                 >
                     {route.length > 1 && (
                         <Polyline
