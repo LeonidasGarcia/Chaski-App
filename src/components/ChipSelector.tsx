@@ -33,7 +33,7 @@ export default function ChipSelector({
             >
                 {label}
             </Text>
-            <View style={localStyles.row}>
+            <View style={[localStyles.row, { gap: theme.spacing(2) }]}>
                 {options.map((option) => {
                     const isSelected = option.value === selected;
                     return (
@@ -89,7 +89,6 @@ const localStyles = StyleSheet.create({
     },
     row: {
         flexDirection: 'row',
-        gap: 8, // theme.spacing(2)
     },
     chip: {
         borderWidth: 1,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Text, TextInput, View, StyleSheet } from 'react-native';
 import { useAppTheme } from '@/lib/useAppTheme';
 
@@ -19,6 +19,10 @@ export default function NumericInputField({
 }: NumericInputFieldProps) {
     const theme = useAppTheme();
     const [text, setText] = useState(value != null ? String(value) : '');
+
+    useEffect(() => {
+        setText(value != null ? String(value) : '');
+    }, [value]);
 
     const handleChangeText = (newText: string) => {
         setText(newText);
