@@ -51,11 +51,21 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before 
 | `updateStatus(id, status)` | Actualiza el estado |
 | `delete(id)` | Elimina un challenge |
 
+### routePointsRepository (sin FK, tabla temporal)
+
+Tabla sin FK ni relaciones. Se limpia al detener/resetear carrera. Usada exclusivamente por background tracking.
+
+| Método | Descripción |
+|--------|-------------|
+| `getAll()` | `Promise<RoutePointRepository[]>` ordenado por timestamp |
+| `insert(point)` | Inserta 1 punto GPS filtrado |
+| `deleteAll()` | `DELETE FROM route_points` (limpia sesión) |
+
 ## Tipos principales
 
 ### `src/types/database.ts`
-- `UserProfileRepository`, `RunRepository`, `ChallengeRepository`
-- `CreateUserProfile`, `CreateRun`, `CreateChallenge`
+- `UserProfileRepository`, `RunRepository`, `ChallengeRepository`, `RoutePointRepository`
+- `CreateUserProfile`, `CreateRun`, `CreateChallenge`, `CreateRoutePoint`
 - `Gender`, `ThemePreference`, `ChallengeStatus`
 
 ### `src/types/domain.ts`
@@ -303,8 +313,86 @@ src/features/settings/
 - `useApplyThemePreference` se ejecuta en `(tabs)/_layout.tsx` para restaurar el tema guardado al iniciar
 - El perfil de BD y el toggle de tema están separados: editar perfil NO modifica el tema
 
+### run
+
+```
+src/features/run/
+├── constants/mapStyle.ts       → customMapStyle JSON (oculta buildings/POIs/transit/terrain)
+├── hooks/useRunTracking.ts     → Background + foreground GPS tracking con filtros y re-sync
+├── hooks/useCurrentPosition.ts → Watcher independiente para marcador en vivo
+├── lib/runTrackingTask.ts      → TaskManager.defineTask para background tracking
+└── screens/
+    ├── MapScreen.tsx            → MapView con Polyline, timer, start/stop, locate button
+    └── RunScreen.tsx            → Pantalla previa al mapa con botón "Abrir mapa"
+```
+
 ### Excepciones documentadas
 
 - `MapScreen.tsx`: tres usos de `rgba(0,0,0,0.5)` y `rgba(0,0,0,0.6)` en overlays sobre el mapa nativo (back button, timer, locate button). La transparencia es necesaria para no bloquear la vista del mapa. No hay tokens de tema equivalentes.
 - `MapScreen.tsx`: `color: '#FFFFFF'` en textos e iconos sobre esos overlays rgba (back arrow, timer/distance/speed, locate icon). Están atados a los overlays y no tienen token de tema.
 - `MapScreen.tsx`: `borderColor: '#FFFFFF'` en el marker verde. Es un borde blanco sobre el mapa nativo para contraste visual. No hay token de tema equivalente.
+
+# Background Tracking
+
+## Stack
+
+- `expo-task-manager@56.0.19` para `defineTask`
+- `expo-location@56.0.18` con `startLocationUpdatesAsync` / `stopLocationUpdatesAsync`
+- `expo-sqlite@~56.0.5` con `SQLite.openDatabaseAsync()` para conexión propia desde el task (fuera de React)
+- `isAndroidBackgroundLocationEnabled: true` en `app.json` (solo el usuario hace builds)
+
+## Arquitectura
+
+- El **background task** (`defineTask`) es el único escritor a la tabla `route_points`. Corre siempre que hay tracking activo (foreground y background).
+- El **foreground watcher** (`watchPositionAsync`) solo actualiza React state para la UI en tiempo real. No escribe a DB.
+- Al volver de background, `AppState` listener dispara `reSyncFromDb()` que lee todos los puntos de `route_points`, recalcula distancia y reemplaza el estado de React.
+
+```
+COMENZAR → deleteAll() + resetRunTrackingState() + foreground watcher + background task
+GPS tick → foreground: React state (UI) | background: INSERT a route_points (único escritor)
+BACKGROUND → foreground congelado, background sigue insertando
+VOLVER    → AppState 'active' → lastCoordRef = null → reSyncFromDb() → Polyline completa
+DETENER   → stopLocationUpdates + stopWatcher + deleteAll() + reset React state
+```
+
+## Filtros GPS (iguales en foreground y background)
+
+| Filtro | Valor | Efecto |
+|--------|-------|--------|
+| `MAX_ACCURACY` | 25m | Puntos con accuracy mayor se descartan |
+| `OUTLIER_THRESHOLD` | 80m | Saltos mayores a 80m se descartan (GPS errático) |
+| `MIN_DISTANCE` | 2m | Puntos a menos de 2m del anterior se descartan (estático) |
+
+## `timeInterval` y frecuencia de UI
+
+- `timeInterval: 500` en ambos watchers (foreground y background)
+- El Polyline se actualiza cada ~0.5s en lugar de 1s → línea más fluida
+- El filtro de 2m evita saturar la Polyline con puntos duplicados cuando el usuario está quieto
+- Timer de cuenta regresiva sigue en 1s (`setInterval(1000)`)
+
+## Archivos clave
+
+| Archivo | Rol |
+|---|---|
+| `src/features/run/lib/runTrackingTask.ts` | `defineTask('BACKGROUND_RUN_TRACKING', ...)` — módulo-level, conexión propia SQLite, filtros, `resetRunTrackingState()` |
+| `src/features/run/hooks/useRunTracking.ts` | Hook principal: `start()`, `stop()`, `reset()`, `reSyncFromDb()`, AppState listener |
+| `src/db/repositories/routePointsRepository.ts` | Factory: `getAll()`, `insert()`, `deleteAll()` |
+| `src/types/database.ts` | `RoutePointRepository`, `CreateRoutePoint` |
+| `src/db/database.ts` | Migration v2 — tabla `route_points` (DATABASE_VERSION = 2) |
+
+## Consideraciones importantes
+
+- **`defineTask` no `TaskManager.defineTask`**: el import correcto es `import { defineTask } from 'expo-task-manager'`. `TaskManager` no es un export.
+- **Conexión propia SQLite**: el background task abre su propia conexión con `SQLite.openDatabaseAsync('chaski.db')`. No puede usar `useSQLiteContext` (fuera de React).
+- **`lastCoordRef` reset en re-sync**: al volver de background se setea `lastCoordRef.current = null` para evitar que el primer GPS sea filtrado como outlier.
+- **Puntos huérfanos**: si el usuario cierra la app durante una carrera, los puntos quedan en `route_points`. Se limpian con `deleteAll()` al próximo `start()`.
+- **Builds**: solo el usuario ejecuta `eas build`. Nunca correr builds desde el asistente.
+
+## Critical Context (adicional)
+
+- `timeInterval: 500` + `distanceInterval: 0` + `Accuracy.High` en foreground y background.
+- Filtro de distancia mínima de 2m evita puntos redundantes cuando el usuario está quieto.
+- El foreground watcher NO escribe a DB para evitar duplicados con el background task.
+- `reSyncFromDb()` recalcula distancia total con haversine sobre todos los puntos de DB.
+- `AppState.addEventListener('change', ...)` con cleanup de subscription en `useEffect`.
+- `resetRunTrackingState()` resetea `lastPoint` interno del background task para evitar outliers falsos entre carreras.
