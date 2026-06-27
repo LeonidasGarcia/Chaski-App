@@ -4,11 +4,13 @@ import { migrateDbIfNeeded } from '@/db/database';
 import { createUserProfileRepository } from '@/db/repositories/userProfileRepository';
 import { createRunsRepository } from '@/db/repositories/runsRepository';
 import { createChallengesRepository } from '@/db/repositories/challengesRepository';
+import { createRoutePointsRepository } from '@/db/repositories/routePointsRepository';
 
 interface DatabaseContextValue {
     userProfile: ReturnType<typeof createUserProfileRepository>;
     runs: ReturnType<typeof createRunsRepository>;
     challenges: ReturnType<typeof createChallengesRepository>;
+    routePoints: ReturnType<typeof createRoutePointsRepository>;
 }
 
 const DatabaseContext = createContext<DatabaseContextValue | null>(null);
@@ -20,6 +22,7 @@ function DatabaseProviderInner({ children }: { children: ReactNode }) {
             userProfile: createUserProfileRepository(db),
             runs: createRunsRepository(db),
             challenges: createChallengesRepository(db),
+            routePoints: createRoutePointsRepository(db),
         }),
         [db],
     );

@@ -30,6 +30,16 @@ export interface ChallengeRepository {
     status: ChallengeStatus;
 }
 
+export interface RoutePointRepository {
+    id: number;
+    latitude: number;
+    longitude: number;
+    timestamp: string;
+    accuracy: number | null;
+    speed: number | null;
+}
+
 export type CreateUserProfile = Omit<UserProfileRepository, 'id'>;
 export type CreateRun = Omit<RunRepository, 'id'>;
 export type CreateChallenge = Omit<ChallengeRepository, 'id'>;
+export type CreateRoutePoint = Omit<RoutePointRepository, 'id'>;

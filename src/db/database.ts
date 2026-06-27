@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export async function migrateDbIfNeeded(db: SQLiteDatabase) {
-    const DATABASE_VERSION = 1;
+    const DATABASE_VERSION = 2;
     const result = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
     const currentDbVersion = result?.user_version ?? 0;
 
@@ -37,6 +37,15 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase) {
         target_time_seconds INTEGER NOT NULL,
         status TEXT NOT NULL DEFAULT 'FAILED' CHECK(status IN ('FAILED', 'ACHIEVED', 'SURPASSED')),
         FOREIGN KEY (run_id) REFERENCES runs(id) ON DELETE CASCADE
+      )`);
+
+        await db.execAsync(`CREATE TABLE IF NOT EXISTS route_points (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        timestamp TEXT NOT NULL,
+        accuracy REAL,
+        speed REAL
       )`);
 
         await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
