@@ -45,7 +45,8 @@
             [
                 "expo-location",
                 {
-                    "locationWhenInUsePermission": "Chaski necesita tu ubicación para registrar tus rutas de running."
+                    "locationWhenInUsePermission": "Chaski necesita tu ubicación para registrar tus rutas de running.",
+                    "isAndroidBackgroundLocationEnabled": true
                 }
             ]
         ],
