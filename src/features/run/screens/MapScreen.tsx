@@ -26,6 +26,7 @@ export default function MapScreen() {
         | undefined
     >(undefined);
     const mapRef = useRef<MapView>(null);
+    const [followUser, setFollowUser] = useState(true);
     const { isTracking, route, elapsed, distanceMeters, speedKmh, start, stop } = useRunTracking();
     const currentPosition = useCurrentPosition();
     const isDark = UnistylesRuntime.themeName === 'dark';
@@ -43,13 +44,13 @@ export default function MapScreen() {
     }, []);
 
     useEffect(() => {
-        if (currentPosition) {
+        if (currentPosition && followUser) {
             mapRef.current?.animateCamera({
                 center: currentPosition,
                 zoom: 20,
             });
         }
-    }, [currentPosition]);
+    }, [currentPosition, followUser]);
 
     return (
         <SafeScreenContainer edges={['top', 'bottom']}>
@@ -63,6 +64,7 @@ export default function MapScreen() {
                         userInterfaceStyle={isDark ? 'dark' : 'light'}
                         customMapStyle={MAP_STYLE}
                         showsBuildings={false}
+                        onPanDrag={() => setFollowUser(false)}
                     >
                         {currentPosition && (
                             <Marker coordinate={currentPosition} anchor={{ x: 0.5, y: 0.5 }}>
@@ -189,15 +191,16 @@ export default function MapScreen() {
 
                     {currentPosition && (
                         <TouchableOpacity
-                            onPress={() =>
+                            onPress={() => {
                                 mapRef.current?.animateCamera({
                                     center: {
                                         latitude: currentPosition.latitude,
                                         longitude: currentPosition.longitude,
                                     },
                                     zoom: 20,
-                                })
-                            }
+                                });
+                                setFollowUser(true);
+                            }}
                             style={{
                                 position: 'absolute',
                                 bottom: theme.spacing(16),
@@ -211,7 +214,11 @@ export default function MapScreen() {
                                 zIndex: 1,
                             }}
                         >
-                            <Ionicons name="locate" size={22} color="#FFFFFF" />
+                            <Ionicons
+                                name={followUser ? 'locate-sharp' : 'locate'}
+                                size={22}
+                                color={followUser ? theme.colors.primary : '#FFFFFF'}
+                            />
                             {/* excepción: icono sobre overlay rgba */}
                         </TouchableOpacity>
                     )}

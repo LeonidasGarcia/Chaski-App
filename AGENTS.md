@@ -322,7 +322,7 @@ src/features/run/
 ├── hooks/useCurrentPosition.ts → Watcher independiente para marcador en vivo
 ├── lib/runTrackingTask.ts      → TaskManager.defineTask para background tracking
 └── screens/
-    ├── MapScreen.tsx            → MapView con Polyline, timer, start/stop, locate button
+    ├── MapScreen.tsx            → MapView con Polyline, timer, start/stop, locate button (toggle auto-follow con `followUser` + `onPanDrag`)
     └── RunScreen.tsx            → Pantalla previa al mapa con botón "Abrir mapa"
 ```
 
