@@ -44,6 +44,7 @@ export function useRunTracking(): UseRunTrackingReturn {
     const watcherRef = useRef<Location.LocationSubscription | null>(null);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const lastCoordRef = useRef<Coordinate | null>(null);
+    const startTimeRef = useRef<number | null>(null);
 
     const clearWatcher = useCallback(() => {
         if (watcherRef.current) {
@@ -80,6 +81,9 @@ export function useRunTracking(): UseRunTrackingReturn {
         setRoute(coords);
         setDistanceMeters(dist);
         setSpeedKmh(speed);
+        if (startTimeRef.current !== null) {
+            setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+        }
         lastCoordRef.current = coords[coords.length - 1];
     }, [routePoints]);
 
@@ -92,6 +96,7 @@ export function useRunTracking(): UseRunTrackingReturn {
         setDistanceMeters(0);
         setSpeedKmh(0);
         lastCoordRef.current = null;
+        startTimeRef.current = Date.now();
         setIsTracking(true);
 
         const watcher = await Location.watchPositionAsync(
@@ -135,7 +140,9 @@ export function useRunTracking(): UseRunTrackingReturn {
         }).catch(() => {});
 
         timerRef.current = setInterval(() => {
-            setElapsed((prev) => prev + 1);
+            if (startTimeRef.current !== null) {
+                setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+            }
         }, 1000);
     }, [routePoints]);
 
@@ -144,6 +151,7 @@ export function useRunTracking(): UseRunTrackingReturn {
         clearWatcher();
         clearTimer();
         routePoints.deleteAll().catch(() => {});
+        startTimeRef.current = null;
         setIsTracking(false);
     }, [clearWatcher, clearTimer, routePoints]);
 
@@ -157,6 +165,7 @@ export function useRunTracking(): UseRunTrackingReturn {
         setDistanceMeters(0);
         setSpeedKmh(0);
         lastCoordRef.current = null;
+        startTimeRef.current = null;
         setIsTracking(false);
     }, [clearWatcher, clearTimer, routePoints]);
 

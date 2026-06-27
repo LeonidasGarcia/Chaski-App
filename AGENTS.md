@@ -318,11 +318,11 @@ src/features/settings/
 ```
 src/features/run/
 ├── constants/mapStyle.ts       → customMapStyle JSON (oculta buildings/POIs/transit/terrain)
-├── hooks/useRunTracking.ts     → Background + foreground GPS tracking con filtros y re-sync
-├── hooks/useCurrentPosition.ts → Watcher independiente para marcador en vivo
+├── hooks/useRunTracking.ts     → Background + foreground GPS tracking con filtros, re-sync, y elapsed basado en wall clock
+├── hooks/useCurrentPosition.ts → Watcher independiente (timeInterval: 200) para marcador en vivo con animación suave vía RAF lerp
 ├── lib/runTrackingTask.ts      → TaskManager.defineTask para background tracking
 └── screens/
-    ├── MapScreen.tsx            → MapView con Polyline, timer, start/stop, locate button (toggle auto-follow con `followUser` + `onPanDrag`)
+    ├── MapScreen.tsx            → MapView con Polyline, timer, start/stop, locate button (toggle auto-follow con `followUser` + `onPanDrag`), marker animado vía `requestAnimationFrame` lerp (200ms easeOutQuad)
     └── RunScreen.tsx            → Pantalla previa al mapa con botón "Abrir mapa"
 ```
 
@@ -331,6 +331,7 @@ src/features/run/
 - `MapScreen.tsx`: tres usos de `rgba(0,0,0,0.5)` y `rgba(0,0,0,0.6)` en overlays sobre el mapa nativo (back button, timer, locate button). La transparencia es necesaria para no bloquear la vista del mapa. No hay tokens de tema equivalentes.
 - `MapScreen.tsx`: `color: '#FFFFFF'` en textos e iconos sobre esos overlays rgba (back arrow, timer/distance/speed, locate icon). Están atados a los overlays y no tienen token de tema.
 - `MapScreen.tsx`: `borderColor: '#FFFFFF'` en el marker verde. Es un borde blanco sobre el mapa nativo para contraste visual. No hay token de tema equivalente.
+- `MapScreen.tsx`: Animación del marker vía `requestAnimationFrame` + `lerp` con easeOutQuad (200ms) en lugar de `AnimatedRegion`. `AnimatedRegion` es para `MapView.region`, no para `Marker.coordinate`. `animateMarkerToCoordinate()` es iOS-only. `displayedPosition` se actualiza en el RAF loop usando `useRef` (`displayedPosRef`) para evitar stale closures.
 
 # Background Tracking
 
@@ -376,6 +377,7 @@ DETENER   → stopLocationUpdates + stopWatcher + deleteAll() + reset React stat
 |---|---|
 | `src/features/run/lib/runTrackingTask.ts` | `defineTask('BACKGROUND_RUN_TRACKING', ...)` — módulo-level, conexión propia SQLite, filtros, `resetRunTrackingState()` |
 | `src/features/run/hooks/useRunTracking.ts` | Hook principal: `start()`, `stop()`, `reset()`, `reSyncFromDb()`, AppState listener |
+| `src/features/run/hooks/useCurrentPosition.ts` | Watcher independiente (`timeInterval: 200`) para marcador en vivo con animación suave vía RAF lerp |
 | `src/db/repositories/routePointsRepository.ts` | Factory: `getAll()`, `insert()`, `deleteAll()` |
 | `src/types/database.ts` | `RoutePointRepository`, `CreateRoutePoint` |
 | `src/db/database.ts` | Migration v2 — tabla `route_points` (DATABASE_VERSION = 2) |
@@ -396,3 +398,6 @@ DETENER   → stopLocationUpdates + stopWatcher + deleteAll() + reset React stat
 - `reSyncFromDb()` recalcula distancia total con haversine sobre todos los puntos de DB.
 - `AppState.addEventListener('change', ...)` con cleanup de subscription en `useEffect`.
 - `resetRunTrackingState()` resetea `lastPoint` interno del background task para evitar outliers falsos entre carreras.
+- **Marker animation**: `Marker` acepta `coordinate` tipo `LatLng`. NO usar `AnimatedRegion` (es para `MapView.region`, no `Marker.coordinate`). NO usar `animateMarkerToCoordinate` (iOS-only). Animación con `requestAnimationFrame` loop + easeOutQuad (`t * (2 - t)`) en 200ms. `displayedPosition` vía `setState` en RAF loop, `displayedPosRef` evita closures obsoletas.
+- **Elapsed wall clock**: `elapsed` se calcula como `Math.floor((Date.now() - startTimeRef.current) / 1000)`, no con ticks de `setInterval`. Esto asegura que al re-sync desde background (`AppState 'active'`) el timer muestre el valor correcto aunque los timers de JS se hayan suspendido.
+- **`timeInterval: 200` en `useCurrentPosition`** vs `500` en los watchers de tracking. Es intencional: mayor frecuencia para animación suave del marker. Es un watcher independiente que solo actualiza React state, no escribe a DB.
