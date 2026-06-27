@@ -27,6 +27,12 @@ export default function MapScreen() {
     >(undefined);
     const mapRef = useRef<MapView>(null);
     const [followUser, setFollowUser] = useState(true);
+    const [displayedPosition, setDisplayedPosition] = useState<{
+        latitude: number;
+        longitude: number;
+    } | null>(null);
+    const animFrameRef = useRef<number | null>(null);
+    const displayedPosRef = useRef({ latitude: 0, longitude: 0 });
     const { isTracking, route, elapsed, distanceMeters, speedKmh, start, stop } = useRunTracking();
     const currentPosition = useCurrentPosition();
     const isDark = UnistylesRuntime.themeName === 'dark';
@@ -52,6 +58,45 @@ export default function MapScreen() {
         }
     }, [currentPosition, followUser]);
 
+    useEffect(() => {
+        if (!currentPosition) return;
+
+        if (!displayedPosition) {
+            setDisplayedPosition(currentPosition);
+            displayedPosRef.current = currentPosition;
+            return;
+        }
+
+        const from = { ...displayedPosRef.current };
+        const to = currentPosition;
+        const startTime = Date.now();
+        const duration = 200;
+
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const t = Math.min(elapsed / duration, 1);
+            const ease = t * (2 - t);
+
+            const lat = from.latitude + (to.latitude - from.latitude) * ease;
+            const lng = from.longitude + (to.longitude - from.longitude) * ease;
+
+            displayedPosRef.current = { latitude: lat, longitude: lng };
+            setDisplayedPosition({ latitude: lat, longitude: lng });
+
+            if (t < 1) {
+                animFrameRef.current = requestAnimationFrame(animate);
+            }
+        };
+
+        animFrameRef.current = requestAnimationFrame(animate);
+
+        return () => {
+            if (animFrameRef.current !== null) {
+                cancelAnimationFrame(animFrameRef.current);
+            }
+        };
+    }, [currentPosition]);
+
     return (
         <SafeScreenContainer edges={['top', 'bottom']}>
             <LocationPermissionGate>
@@ -67,7 +112,7 @@ export default function MapScreen() {
                         onPanDrag={() => setFollowUser(false)}
                     >
                         {currentPosition && (
-                            <Marker coordinate={currentPosition} anchor={{ x: 0.5, y: 0.5 }}>
+                            <Marker coordinate={displayedPosition ?? currentPosition} anchor={{ x: 0.5, y: 0.5 }}>
                                 <View
                                     style={{
                                         width: 14,
