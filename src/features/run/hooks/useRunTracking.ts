@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import * as Location from 'expo-location';
 import type { Coordinate } from '@/types/domain';
+import { useDatabaseContext } from '@/context/DatabaseContext';
+import { resetRunTrackingState } from '../lib/runTrackingTask';
 
+const TASK_NAME = 'BACKGROUND_RUN_TRACKING';
 const OUTLIER_THRESHOLD_METERS = 80;
+const MIN_DISTANCE_METERS = 2;
 const MAX_ACCURACY_METERS = 25;
 
 function haversine(a: Coordinate, b: Coordinate): number {
@@ -30,6 +35,7 @@ interface UseRunTrackingReturn {
 }
 
 export function useRunTracking(): UseRunTrackingReturn {
+    const { routePoints } = useDatabaseContext();
     const [isTracking, setIsTracking] = useState(false);
     const [route, setRoute] = useState<Coordinate[]>([]);
     const [elapsed, setElapsed] = useState(0);
@@ -53,7 +59,34 @@ export function useRunTracking(): UseRunTrackingReturn {
         }
     }, []);
 
+    const reSyncFromDb = useCallback(async () => {
+        const points = await routePoints.getAll().catch(() => null);
+        if (!points || points.length === 0) return;
+
+        const coords: Coordinate[] = points.map((p) => ({
+            latitude: p.latitude,
+            longitude: p.longitude,
+            timestamp: p.timestamp,
+        }));
+
+        let dist = 0;
+        for (let i = 1; i < coords.length; i++) {
+            dist += haversine(coords[i - 1], coords[i]);
+        }
+
+        const last = points[points.length - 1];
+        const speed = last.speed !== null ? Math.round(last.speed * 3.6) : 0;
+
+        setRoute(coords);
+        setDistanceMeters(dist);
+        setSpeedKmh(speed);
+        lastCoordRef.current = coords[coords.length - 1];
+    }, [routePoints]);
+
     const start = useCallback(async () => {
+        await routePoints.deleteAll().catch(() => {});
+        resetRunTrackingState();
+
         setRoute([]);
         setElapsed(0);
         setDistanceMeters(0);
@@ -63,7 +96,7 @@ export function useRunTracking(): UseRunTrackingReturn {
 
         const watcher = await Location.watchPositionAsync(
             {
-                timeInterval: 1000,
+                timeInterval: 500,
                 distanceInterval: 0,
                 accuracy: Location.Accuracy.High,
             },
@@ -80,9 +113,8 @@ export function useRunTracking(): UseRunTrackingReturn {
 
                 if (lastCoordRef.current) {
                     const dist = haversine(lastCoordRef.current, coord);
-                    if (dist > OUTLIER_THRESHOLD_METERS) {
-                        return;
-                    }
+                    if (dist < MIN_DISTANCE_METERS) return;
+                    if (dist > OUTLIER_THRESHOLD_METERS) return;
                     setDistanceMeters((prev) => prev + dist);
                 }
 
@@ -95,30 +127,55 @@ export function useRunTracking(): UseRunTrackingReturn {
         );
         watcherRef.current = watcher;
 
+        await Location.startLocationUpdatesAsync(TASK_NAME, {
+            accuracy: Location.Accuracy.High,
+            timeInterval: 500,
+            distanceInterval: 0,
+            showsBackgroundLocationIndicator: true,
+        }).catch(() => {});
+
         timerRef.current = setInterval(() => {
             setElapsed((prev) => prev + 1);
         }, 1000);
-    }, []);
+    }, [routePoints]);
 
     const stop = useCallback(() => {
+        Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
         clearWatcher();
         clearTimer();
+        routePoints.deleteAll().catch(() => {});
         setIsTracking(false);
-    }, [clearWatcher, clearTimer]);
+    }, [clearWatcher, clearTimer, routePoints]);
 
     const reset = useCallback(() => {
+        Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
         clearWatcher();
         clearTimer();
+        routePoints.deleteAll().catch(() => {});
         setRoute([]);
         setElapsed(0);
         setDistanceMeters(0);
         setSpeedKmh(0);
         lastCoordRef.current = null;
         setIsTracking(false);
-    }, [clearWatcher, clearTimer]);
+    }, [clearWatcher, clearTimer, routePoints]);
+
+    useEffect(() => {
+        const sub = AppState.addEventListener('change', (nextState) => {
+            if (nextState === 'active') {
+                lastCoordRef.current = null;
+                reSyncFromDb();
+            }
+        });
+
+        return () => {
+            sub.remove();
+        };
+    }, [reSyncFromDb]);
 
     useEffect(() => {
         return () => {
+            Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
             clearWatcher();
             clearTimer();
         };
