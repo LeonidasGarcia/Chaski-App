@@ -1,12 +1,17 @@
 import { defineTask } from 'expo-task-manager';
 import * as SQLite from 'expo-sqlite';
+import { setupNotificationChannel, updateNotification } from './trackingNotification';
 
 const TASK_NAME = 'BACKGROUND_RUN_TRACKING';
 const MAX_ACCURACY = 25;
 const OUTLIER_THRESHOLD = 80;
 const MIN_DISTANCE = 2;
+const NOTIFICATION_INTERVAL = 5000;
 
 let lastPoint: { latitude: number; longitude: number } | null = null;
+let startTime: number | null = null;
+let totalDistance = 0;
+let lastNotificationTime = 0;
 let dbPromise: ReturnType<typeof SQLite.openDatabaseAsync> | null = null;
 
 function haversine(
@@ -32,6 +37,9 @@ async function getDb(): Promise<SQLite.SQLiteDatabase> {
 
 export function resetRunTrackingState() {
     lastPoint = null;
+    startTime = null;
+    totalDistance = 0;
+    lastNotificationTime = 0;
 }
 
 defineTask(TASK_NAME, async ({ data, error }) => {
@@ -49,9 +57,15 @@ defineTask(TASK_NAME, async ({ data, error }) => {
             const dist = haversine(lastPoint, coord);
             if (dist < MIN_DISTANCE) continue;
             if (dist > OUTLIER_THRESHOLD) continue;
+            totalDistance += dist;
         }
 
         lastPoint = coord;
+
+        if (startTime === null) {
+            startTime = Date.now();
+            setupNotificationChannel().catch(() => {});
+        }
 
         await db.runAsync(
             'INSERT INTO route_points (latitude, longitude, timestamp, accuracy, speed) VALUES (?, ?, ?, ?, ?)',
@@ -61,5 +75,12 @@ defineTask(TASK_NAME, async ({ data, error }) => {
             loc.coords.accuracy,
             loc.coords.speed,
         );
+
+        const now = Date.now();
+        if (now - lastNotificationTime >= NOTIFICATION_INTERVAL) {
+            const elapsed = Math.floor((now - startTime) / 1000);
+            updateNotification(elapsed, totalDistance).catch(() => {});
+            lastNotificationTime = now;
+        }
     }
 });
