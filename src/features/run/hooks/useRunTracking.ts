@@ -4,6 +4,7 @@ import * as Location from 'expo-location';
 import type { Coordinate } from '@/types/domain';
 import { useDatabaseContext } from '@/context/DatabaseContext';
 import { resetRunTrackingState } from '../lib/runTrackingTask';
+import { cancelNotification } from '../lib/trackingNotification';
 
 const TASK_NAME = 'BACKGROUND_RUN_TRACKING';
 const OUTLIER_THRESHOLD_METERS = 80;
@@ -88,6 +89,7 @@ export function useRunTracking(): UseRunTrackingReturn {
     }, [routePoints]);
 
     const start = useCallback(async () => {
+        await cancelNotification().catch(() => {});
         await routePoints.deleteAll().catch(() => {});
         resetRunTrackingState();
 
@@ -147,6 +149,7 @@ export function useRunTracking(): UseRunTrackingReturn {
     }, [routePoints]);
 
     const stop = useCallback(() => {
+        cancelNotification().catch(() => {});
         Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
         clearWatcher();
         clearTimer();
@@ -156,6 +159,7 @@ export function useRunTracking(): UseRunTrackingReturn {
     }, [clearWatcher, clearTimer, routePoints]);
 
     const reset = useCallback(() => {
+        cancelNotification().catch(() => {});
         Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
         clearWatcher();
         clearTimer();
