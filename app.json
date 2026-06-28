@@ -42,11 +42,16 @@
             "expo-sqlite",
             "expo-font",
             "expo-task-manager",
+            "expo-notifications",
             [
                 "expo-location",
                 {
                     "locationWhenInUsePermission": "Chaski necesita tu ubicación para registrar tus rutas de running.",
-                    "isAndroidBackgroundLocationEnabled": true
+                    "isAndroidBackgroundLocationEnabled": true,
+                    "foregroundService": {
+                        "notificationTitle": "Chaski",
+                        "notificationBody": "Corriendo..."
+                    }
                 }
             ]
         ],
