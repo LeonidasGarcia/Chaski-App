@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 import type { Coordinate } from '@/types/domain';
 import { useDatabaseContext } from '@/context/DatabaseContext';
 import { resetRunTrackingState } from '../lib/runTrackingTask';
@@ -90,6 +91,7 @@ export function useRunTracking(): UseRunTrackingReturn {
 
     const start = useCallback(async () => {
         await cancelNotification().catch(() => {});
+        await Notifications.requestPermissionsAsync().catch(() => {});
         await routePoints.deleteAll().catch(() => {});
         resetRunTrackingState();
 

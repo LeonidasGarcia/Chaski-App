@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 
 const NOTIFICATION_ID = 'chaski-run';
-const CHANNEL_ID = 'chaski-run-channel';
+const CHANNEL_ID = 'chaski-run-tracking';
 
 function formatTime(seconds: number): string {
     const h = Math.floor(seconds / 3600);
@@ -13,7 +13,7 @@ function formatTime(seconds: number): string {
 export async function setupNotificationChannel() {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
         name: 'Chaski',
-        importance: Notifications.AndroidImportance.DEFAULT,
+        importance: Notifications.AndroidImportance.HIGH,
         lightColor: '#19FA00',
     });
 }
@@ -25,7 +25,7 @@ export async function updateNotification(elapsed: number, distanceMeters: number
             title: 'Chaski',
             body: `${formatTime(elapsed)} · ${(distanceMeters / 1000).toFixed(2)} km`,
             color: '#19FA00',
-            priority: Notifications.AndroidNotificationPriority.DEFAULT,
+            priority: Notifications.AndroidNotificationPriority.HIGH,
             sticky: true,
         },
         trigger: { channelId: CHANNEL_ID },
