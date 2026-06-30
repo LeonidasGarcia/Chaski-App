@@ -13,9 +13,8 @@ function formatTime(seconds: number): string {
 export async function setupNotificationChannel() {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
         name: 'Chaski',
-        importance: Notifications.AndroidImportance.HIGH,
+        importance: Notifications.AndroidImportance.DEFAULT,
         lightColor: '#19FA00',
-        bypassDnd: true,
     });
 }
 
@@ -26,14 +25,10 @@ export async function updateNotification(elapsed: number, distanceMeters: number
             title: 'Chaski',
             body: `${formatTime(elapsed)} · ${(distanceMeters / 1000).toFixed(2)} km`,
             color: '#19FA00',
-            priority: Notifications.AndroidNotificationPriority.HIGH,
+            priority: Notifications.AndroidNotificationPriority.DEFAULT,
             sticky: true,
         },
-        trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-            seconds: 1,
-            channelId: CHANNEL_ID,
-        },
+        trigger: { channelId: CHANNEL_ID },
     });
 }
 

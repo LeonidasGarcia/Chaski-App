@@ -6,7 +6,7 @@ const TASK_NAME = 'BACKGROUND_RUN_TRACKING';
 const MAX_ACCURACY = 25;
 const OUTLIER_THRESHOLD = 80;
 const MIN_DISTANCE = 2;
-const NOTIFICATION_INTERVAL = 5000;
+const NOTIFICATION_INTERVAL = 1000;
 
 let lastPoint: { latitude: number; longitude: number } | null = null;
 let startTime: number | null = null;
@@ -75,12 +75,12 @@ defineTask(TASK_NAME, async ({ data, error }) => {
             loc.coords.accuracy,
             loc.coords.speed,
         );
+    }
 
-        const now = Date.now();
-        if (now - lastNotificationTime >= NOTIFICATION_INTERVAL) {
-            const elapsed = Math.floor((now - startTime) / 1000);
-            updateNotification(elapsed, totalDistance).catch(() => {});
-            lastNotificationTime = now;
-        }
+    const now = Date.now();
+    if (startTime !== null && now - lastNotificationTime >= NOTIFICATION_INTERVAL) {
+        const elapsed = Math.floor((now - startTime) / 1000);
+        updateNotification(elapsed, totalDistance).catch(() => {});
+        lastNotificationTime = now;
     }
 });
