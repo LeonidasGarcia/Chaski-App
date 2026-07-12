@@ -28,7 +28,7 @@ export async function updateNotification(elapsed: number, distanceMeters: number
             priority: Notifications.AndroidNotificationPriority.HIGH,
             sticky: true,
         },
-        trigger: { channelId: CHANNEL_ID },
+        trigger: null,
     });
 }
 

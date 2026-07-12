@@ -1,17 +1,13 @@
 import { defineTask } from 'expo-task-manager';
 import * as SQLite from 'expo-sqlite';
-import { setupNotificationChannel, updateNotification } from './trackingNotification';
 
 const TASK_NAME = 'BACKGROUND_RUN_TRACKING';
 const MAX_ACCURACY = 25;
 const OUTLIER_THRESHOLD = 80;
 const MIN_DISTANCE = 2;
-const NOTIFICATION_INTERVAL = 1000;
-
 let lastPoint: { latitude: number; longitude: number } | null = null;
 let startTime: number | null = null;
 let totalDistance = 0;
-let lastNotificationTime = 0;
 let dbPromise: ReturnType<typeof SQLite.openDatabaseAsync> | null = null;
 
 function haversine(
@@ -39,11 +35,14 @@ export function resetRunTrackingState() {
     lastPoint = null;
     startTime = null;
     totalDistance = 0;
-    lastNotificationTime = 0;
 }
 
 defineTask(TASK_NAME, async ({ data, error }) => {
     if (error || !data) return;
+
+    if (startTime === null) {
+        startTime = Date.now();
+    }
 
     const db = await getDb();
     const locations = (data as any).locations ?? [];
@@ -62,25 +61,15 @@ defineTask(TASK_NAME, async ({ data, error }) => {
 
         lastPoint = coord;
 
-        if (startTime === null) {
-            startTime = Date.now();
-            setupNotificationChannel().catch(() => {});
-        }
-
-        await db.runAsync(
-            'INSERT INTO route_points (latitude, longitude, timestamp, accuracy, speed) VALUES (?, ?, ?, ?, ?)',
-            loc.coords.latitude,
-            loc.coords.longitude,
-            new Date(loc.timestamp).toISOString(),
-            loc.coords.accuracy,
-            loc.coords.speed,
-        );
-    }
-
-    const now = Date.now();
-    if (startTime !== null && now - lastNotificationTime >= NOTIFICATION_INTERVAL) {
-        const elapsed = Math.floor((now - startTime) / 1000);
-        updateNotification(elapsed, totalDistance).catch(() => {});
-        lastNotificationTime = now;
+        try {
+            await db.runAsync(
+                'INSERT INTO route_points (latitude, longitude, timestamp, accuracy, speed) VALUES (?, ?, ?, ?, ?)',
+                loc.coords.latitude,
+                loc.coords.longitude,
+                new Date(loc.timestamp).toISOString(),
+                loc.coords.accuracy,
+                loc.coords.speed,
+            );
+        } catch {}
     }
 });

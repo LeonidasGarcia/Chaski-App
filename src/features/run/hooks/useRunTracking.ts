@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import * as Location from 'expo-location';
-import * as Notifications from 'expo-notifications';
 import type { Coordinate } from '@/types/domain';
 import { useDatabaseContext } from '@/context/DatabaseContext';
 import { resetRunTrackingState } from '../lib/runTrackingTask';
-import { cancelNotification } from '../lib/trackingNotification';
+import {
+    cancelNotification,
+    setupNotificationChannel,
+    updateNotification,
+} from '../lib/trackingNotification';
 
 const TASK_NAME = 'BACKGROUND_RUN_TRACKING';
 const OUTLIER_THRESHOLD_METERS = 80;
@@ -45,6 +48,7 @@ export function useRunTracking(): UseRunTrackingReturn {
     const [speedKmh, setSpeedKmh] = useState(0);
     const watcherRef = useRef<Location.LocationSubscription | null>(null);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const bgIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const lastCoordRef = useRef<Coordinate | null>(null);
     const startTimeRef = useRef<number | null>(null);
 
@@ -59,6 +63,13 @@ export function useRunTracking(): UseRunTrackingReturn {
         if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
+        }
+    }, []);
+
+    const clearBgInterval = useCallback(() => {
+        if (bgIntervalRef.current) {
+            clearInterval(bgIntervalRef.current);
+            bgIntervalRef.current = null;
         }
     }, []);
 
@@ -90,8 +101,8 @@ export function useRunTracking(): UseRunTrackingReturn {
     }, [routePoints]);
 
     const start = useCallback(async () => {
+        await setupNotificationChannel().catch(() => {});
         await cancelNotification().catch(() => {});
-        await Notifications.requestPermissionsAsync().catch(() => {});
         await routePoints.deleteAll().catch(() => {});
         resetRunTrackingState();
 
@@ -155,16 +166,18 @@ export function useRunTracking(): UseRunTrackingReturn {
         Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
         clearWatcher();
         clearTimer();
+        clearBgInterval();
         routePoints.deleteAll().catch(() => {});
         startTimeRef.current = null;
         setIsTracking(false);
-    }, [clearWatcher, clearTimer, routePoints]);
+    }, [clearWatcher, clearTimer, clearBgInterval, routePoints]);
 
     const reset = useCallback(() => {
         cancelNotification().catch(() => {});
         Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
         clearWatcher();
         clearTimer();
+        clearBgInterval();
         routePoints.deleteAll().catch(() => {});
         setRoute([]);
         setElapsed(0);
@@ -173,11 +186,28 @@ export function useRunTracking(): UseRunTrackingReturn {
         lastCoordRef.current = null;
         startTimeRef.current = null;
         setIsTracking(false);
-    }, [clearWatcher, clearTimer, routePoints]);
+    }, [clearWatcher, clearTimer, clearBgInterval, routePoints]);
 
     useEffect(() => {
         const sub = AppState.addEventListener('change', (nextState) => {
+            if (nextState === 'background' && isTracking) {
+                const elapsed =
+                    startTimeRef.current !== null
+                        ? Math.floor((Date.now() - startTimeRef.current) / 1000)
+                        : 0;
+                updateNotification(elapsed, distanceMeters).catch(() => {});
+
+                bgIntervalRef.current = setInterval(() => {
+                    if (startTimeRef.current !== null && isTracking) {
+                        const e = Math.floor((Date.now() - startTimeRef.current) / 1000);
+                        updateNotification(e, distanceMeters).catch(() => {});
+                    }
+                }, 10000);
+            }
+
             if (nextState === 'active') {
+                clearBgInterval();
+                cancelNotification().catch(() => {});
                 lastCoordRef.current = null;
                 reSyncFromDb();
             }
@@ -185,16 +215,18 @@ export function useRunTracking(): UseRunTrackingReturn {
 
         return () => {
             sub.remove();
+            clearBgInterval();
         };
-    }, [reSyncFromDb]);
+    }, [reSyncFromDb, isTracking, distanceMeters, clearBgInterval]);
 
     useEffect(() => {
         return () => {
             Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
             clearWatcher();
             clearTimer();
+            clearBgInterval();
         };
-    }, [clearWatcher, clearTimer]);
+    }, [clearWatcher, clearTimer, clearBgInterval]);
 
     return { isTracking, route, elapsed, distanceMeters, speedKmh, start, stop, reset };
 }
