@@ -37,3 +37,7 @@ export async function cancelNotification() {
     await Notifications.cancelScheduledNotificationAsync(NOTIFICATION_ID);
     await Notifications.dismissNotificationAsync(NOTIFICATION_ID);
 }
+
+setupNotificationChannel().catch((e) =>
+    console.warn('[trackingNotification] Failed to setup channel on import:', e),
+);

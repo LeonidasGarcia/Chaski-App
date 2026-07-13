@@ -14,8 +14,6 @@ import { DatabaseProvider } from '@/context/DatabaseContext';
 import { ThemeVersionProvider } from '@/context/ThemeContext';
 import LocationPermissionGate from '@/components/LocationPermissionGate';
 import * as Notifications from 'expo-notifications';
-import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
 import { cancelNotification } from '@/features/run/lib/trackingNotification';
 
 Notifications.setNotificationHandler({
@@ -52,16 +50,9 @@ export default function RootLayout() {
     }, [fontsLoaded]);
 
     useEffect(() => {
-        cancelNotification().catch(() => {});
-        setTimeout(async () => {
-            try {
-                const registered =
-                    await TaskManager.isTaskRegisteredAsync('BACKGROUND_RUN_TRACKING');
-                if (registered) {
-                    await Location.stopLocationUpdatesAsync('BACKGROUND_RUN_TRACKING');
-                }
-            } catch {}
-        }, 100);
+        cancelNotification().catch((e) =>
+            console.warn('[RootLayout] Failed to cancel notification on startup:', e),
+        );
     }, []);
 
     if (!fontsLoaded) return null;

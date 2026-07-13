@@ -1,7 +1,7 @@
 import { defineTask } from 'expo-task-manager';
 import * as SQLite from 'expo-sqlite';
-import * as Notifications from 'expo-notifications';
 import { cancelNotification, updateNotification } from './trackingNotification';
+import { haversine } from './haversine';
 
 const TASK_NAME = 'BACKGROUND_RUN_TRACKING';
 const MAX_ACCURACY = 25;
@@ -11,22 +11,6 @@ let lastPoint: { latitude: number; longitude: number } | null = null;
 let startTime: number | null = null;
 let totalDistance = 0;
 let dbPromise: ReturnType<typeof SQLite.openDatabaseAsync> | null = null;
-
-function haversine(
-    a: { latitude: number; longitude: number },
-    b: { latitude: number; longitude: number },
-): number {
-    const R = 6_371_000;
-    const toRad = (deg: number) => (deg * Math.PI) / 180;
-    const dLat = toRad(b.latitude - a.latitude);
-    const dLng = toRad(b.longitude - a.longitude);
-    const sinDLat = Math.sin(dLat / 2);
-    const sinDLng = Math.sin(dLng / 2);
-    const h =
-        sinDLat * sinDLat +
-        Math.cos(toRad(a.latitude)) * Math.cos(toRad(b.latitude)) * sinDLng * sinDLng;
-    return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-}
 
 async function getDb(): Promise<SQLite.SQLiteDatabase> {
     if (!dbPromise) dbPromise = SQLite.openDatabaseAsync('chaski.db');
@@ -39,24 +23,15 @@ export function resetRunTrackingState() {
     totalDistance = 0;
 }
 
-try {
-    Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-            shouldShowBanner: false,
-            shouldShowList: true,
-            shouldPlaySound: false,
-            shouldSetBadge: false,
-        }),
-    });
-} catch {}
-
 defineTask(TASK_NAME, async ({ data, error }) => {
     try {
         if (error || !data) return;
 
         if (startTime === null) {
             startTime = Date.now();
-            cancelNotification().catch(() => {});
+            cancelNotification().catch((e) =>
+                console.warn('[runTrackingTask] cancelNotification failed:', e),
+            );
         }
 
         const db = await getDb();
@@ -85,10 +60,16 @@ defineTask(TASK_NAME, async ({ data, error }) => {
                     loc.coords.accuracy,
                     loc.coords.speed,
                 );
-            } catch {}
+            } catch (e) {
+                console.warn('[runTrackingTask] Failed to insert route point:', e);
+            }
         }
 
         const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        updateNotification(elapsed, totalDistance).catch(() => {});
-    } catch {}
+        updateNotification(elapsed, totalDistance).catch((e) =>
+            console.warn('[runTrackingTask] updateNotification failed:', e),
+        );
+    } catch (e) {
+        console.warn('[runTrackingTask] Task execution failed:', e);
+    }
 });

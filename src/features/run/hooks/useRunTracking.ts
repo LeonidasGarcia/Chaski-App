@@ -4,29 +4,13 @@ import * as Location from 'expo-location';
 import type { Coordinate } from '@/types/domain';
 import { useDatabaseContext } from '@/context/DatabaseContext';
 import { resetRunTrackingState } from '../lib/runTrackingTask';
-import {
-    cancelNotification,
-    setupNotificationChannel,
-    updateNotification,
-} from '../lib/trackingNotification';
+import { haversine } from '../lib/haversine';
+import { cancelNotification, updateNotification } from '../lib/trackingNotification';
 
 const TASK_NAME = 'BACKGROUND_RUN_TRACKING';
 const OUTLIER_THRESHOLD_METERS = 80;
 const MIN_DISTANCE_METERS = 2;
 const MAX_ACCURACY_METERS = 25;
-
-function haversine(a: Coordinate, b: Coordinate): number {
-    const R = 6_371_000;
-    const toRad = (deg: number) => (deg * Math.PI) / 180;
-    const dLat = toRad(b.latitude - a.latitude);
-    const dLng = toRad(b.longitude - a.longitude);
-    const sinDLat = Math.sin(dLat / 2);
-    const sinDLng = Math.sin(dLng / 2);
-    const h =
-        sinDLat * sinDLat +
-        Math.cos(toRad(a.latitude)) * Math.cos(toRad(b.latitude)) * sinDLng * sinDLng;
-    return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-}
 
 interface UseRunTrackingReturn {
     isTracking: boolean;
@@ -94,9 +78,12 @@ export function useRunTracking(): UseRunTrackingReturn {
     }, [routePoints]);
 
     const start = useCallback(async () => {
-        await setupNotificationChannel().catch(() => {});
-        await cancelNotification().catch(() => {});
-        await routePoints.deleteAll().catch(() => {});
+        await cancelNotification().catch((e) =>
+            console.warn('[useRunTracking] cancelNotification failed:', e),
+        );
+        await routePoints
+            .deleteAll()
+            .catch((e) => console.warn('[useRunTracking] deleteAll failed:', e));
         resetRunTrackingState();
 
         setRoute([]);
@@ -144,7 +131,9 @@ export function useRunTracking(): UseRunTrackingReturn {
                         startTimeRef.current !== null
                             ? Math.floor((Date.now() - startTimeRef.current) / 1000)
                             : 0;
-                    updateNotification(e, distanceRef.current).catch(() => {});
+                    updateNotification(e, distanceRef.current).catch((e) =>
+                        console.warn('[useRunTracking] updateNotification failed:', e),
+                    );
                 }
             },
         );
@@ -152,10 +141,10 @@ export function useRunTracking(): UseRunTrackingReturn {
 
         await Location.startLocationUpdatesAsync(TASK_NAME, {
             accuracy: Location.Accuracy.High,
-            timeInterval: 1000,
+            timeInterval: 500,
             distanceInterval: 0,
             showsBackgroundLocationIndicator: true,
-        }).catch(() => {});
+        }).catch((e) => console.warn('[useRunTracking] startLocationUpdatesAsync failed:', e));
 
         timerRef.current = setInterval(() => {
             if (startTimeRef.current !== null) {
@@ -165,22 +154,30 @@ export function useRunTracking(): UseRunTrackingReturn {
     }, [routePoints]);
 
     const stop = useCallback(() => {
-        cancelNotification().catch(() => {});
-        Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
+        cancelNotification().catch((e) =>
+            console.warn('[useRunTracking] cancelNotification failed:', e),
+        );
+        Location.stopLocationUpdatesAsync(TASK_NAME).catch((e) =>
+            console.warn('[useRunTracking] stopLocationUpdates failed:', e),
+        );
         clearWatcher();
         clearTimer();
-        routePoints.deleteAll().catch(() => {});
+        routePoints.deleteAll().catch((e) => console.warn('[useRunTracking] deleteAll failed:', e));
         distanceRef.current = 0;
         startTimeRef.current = null;
         setIsTracking(false);
     }, [clearWatcher, clearTimer, routePoints]);
 
     const reset = useCallback(() => {
-        cancelNotification().catch(() => {});
-        Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
+        cancelNotification().catch((e) =>
+            console.warn('[useRunTracking] cancelNotification failed:', e),
+        );
+        Location.stopLocationUpdatesAsync(TASK_NAME).catch((e) =>
+            console.warn('[useRunTracking] stopLocationUpdates failed:', e),
+        );
         clearWatcher();
         clearTimer();
-        routePoints.deleteAll().catch(() => {});
+        routePoints.deleteAll().catch((e) => console.warn('[useRunTracking] deleteAll failed:', e));
         setRoute([]);
         setElapsed(0);
         setDistanceMeters(0);
@@ -198,11 +195,15 @@ export function useRunTracking(): UseRunTrackingReturn {
                     startTimeRef.current !== null
                         ? Math.floor((Date.now() - startTimeRef.current) / 1000)
                         : 0;
-                updateNotification(e, distanceRef.current).catch(() => {});
+                updateNotification(e, distanceRef.current).catch((e) =>
+                    console.warn('[useRunTracking] updateNotification failed:', e),
+                );
             }
 
             if (nextState === 'active') {
-                cancelNotification().catch(() => {});
+                cancelNotification().catch((e) =>
+                    console.warn('[useRunTracking] cancelNotification failed:', e),
+                );
                 lastCoordRef.current = null;
                 reSyncFromDb();
             }
@@ -215,7 +216,9 @@ export function useRunTracking(): UseRunTrackingReturn {
 
     useEffect(() => {
         return () => {
-            Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
+            Location.stopLocationUpdatesAsync(TASK_NAME).catch((e) =>
+                console.warn('[useRunTracking] stopLocationUpdates failed:', e),
+            );
             clearWatcher();
             clearTimer();
         };
