@@ -15,6 +15,7 @@ import { ThemeVersionProvider } from '@/context/ThemeContext';
 import LocationPermissionGate from '@/components/LocationPermissionGate';
 import * as Notifications from 'expo-notifications';
 import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
 import { cancelNotification } from '@/features/run/lib/trackingNotification';
 
 Notifications.setNotificationHandler({
@@ -51,13 +52,16 @@ export default function RootLayout() {
     }, [fontsLoaded]);
 
     useEffect(() => {
-        (async () => {
-            const exists = await Location.hasStartedLocationUpdatesAsync('BACKGROUND_RUN_TRACKING');
-            if (exists) {
-                await Location.stopLocationUpdatesAsync('BACKGROUND_RUN_TRACKING');
-            }
-        })().catch(() => {});
         cancelNotification().catch(() => {});
+        setTimeout(async () => {
+            try {
+                const registered =
+                    await TaskManager.isTaskRegisteredAsync('BACKGROUND_RUN_TRACKING');
+                if (registered) {
+                    await Location.stopLocationUpdatesAsync('BACKGROUND_RUN_TRACKING');
+                }
+            } catch {}
+        }, 100);
     }, []);
 
     if (!fontsLoaded) return null;

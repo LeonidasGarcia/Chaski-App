@@ -50,49 +50,45 @@ try {
     });
 } catch {}
 
-try {
-    defineTask(TASK_NAME, async ({ data, error }) => {
-        console.log('pene corriendo');
-        try {
-            if (error || !data) return;
+defineTask(TASK_NAME, async ({ data, error }) => {
+    try {
+        if (error || !data) return;
 
-            if (startTime === null) {
-                startTime = Date.now();
-                cancelNotification().catch(() => {});
+        if (startTime === null) {
+            startTime = Date.now();
+            cancelNotification().catch(() => {});
+        }
+
+        const db = await getDb();
+        const locations = (data as any).locations ?? [];
+
+        for (const loc of locations) {
+            if (loc.coords.accuracy !== null && loc.coords.accuracy > MAX_ACCURACY) continue;
+
+            const coord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
+
+            if (lastPoint) {
+                const dist = haversine(lastPoint, coord);
+                if (dist < MIN_DISTANCE) continue;
+                if (dist > OUTLIER_THRESHOLD) continue;
+                totalDistance += dist;
             }
 
-            const db = await getDb();
-            const locations = (data as any).locations ?? [];
+            lastPoint = coord;
 
-            for (const loc of locations) {
-                if (loc.coords.accuracy !== null && loc.coords.accuracy > MAX_ACCURACY) continue;
+            try {
+                await db.runAsync(
+                    'INSERT INTO route_points (latitude, longitude, timestamp, accuracy, speed) VALUES (?, ?, ?, ?, ?)',
+                    loc.coords.latitude,
+                    loc.coords.longitude,
+                    new Date(loc.timestamp).toISOString(),
+                    loc.coords.accuracy,
+                    loc.coords.speed,
+                );
+            } catch {}
+        }
 
-                const coord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-
-                if (lastPoint) {
-                    const dist = haversine(lastPoint, coord);
-                    if (dist < MIN_DISTANCE) continue;
-                    if (dist > OUTLIER_THRESHOLD) continue;
-                    totalDistance += dist;
-                }
-
-                lastPoint = coord;
-
-                try {
-                    await db.runAsync(
-                        'INSERT INTO route_points (latitude, longitude, timestamp, accuracy, speed) VALUES (?, ?, ?, ?, ?)',
-                        loc.coords.latitude,
-                        loc.coords.longitude,
-                        new Date(loc.timestamp).toISOString(),
-                        loc.coords.accuracy,
-                        loc.coords.speed,
-                    );
-                } catch {}
-            }
-
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            updateNotification(elapsed, totalDistance).catch(() => {});
-        } catch {}
-    });
-    console.log('pene registro');
-} catch {}
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        updateNotification(elapsed, totalDistance).catch(() => {});
+    } catch {}
+});
