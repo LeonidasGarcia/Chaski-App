@@ -1,3 +1,4 @@
+import '@/features/run/lib/runTrackingTask';
 import { useEffect, useRef } from 'react';
 import { Appearance } from 'react-native';
 import { Stack, SplashScreen } from 'expo-router';
@@ -13,6 +14,8 @@ import { DatabaseProvider } from '@/context/DatabaseContext';
 import { ThemeVersionProvider } from '@/context/ThemeContext';
 import LocationPermissionGate from '@/components/LocationPermissionGate';
 import * as Notifications from 'expo-notifications';
+import * as Location from 'expo-location';
+import { cancelNotification } from '@/features/run/lib/trackingNotification';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -46,6 +49,16 @@ export default function RootLayout() {
             SplashScreen.hideAsync();
         }
     }, [fontsLoaded]);
+
+    useEffect(() => {
+        (async () => {
+            const exists = await Location.hasStartedLocationUpdatesAsync('BACKGROUND_RUN_TRACKING');
+            if (exists) {
+                await Location.stopLocationUpdatesAsync('BACKGROUND_RUN_TRACKING');
+            }
+        })().catch(() => {});
+        cancelNotification().catch(() => {});
+    }, []);
 
     if (!fontsLoaded) return null;
 

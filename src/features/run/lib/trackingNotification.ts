@@ -12,9 +12,11 @@ function formatTime(seconds: number): string {
 
 export async function setupNotificationChannel() {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-        name: 'Chaski',
-        importance: Notifications.AndroidImportance.HIGH,
+        name: 'Chaski Tracking',
+        importance: Notifications.AndroidImportance.LOW,
         lightColor: '#19FA00',
+        showBadge: false,
+        vibrationPattern: [0],
     });
 }
 
@@ -22,13 +24,12 @@ export async function updateNotification(elapsed: number, distanceMeters: number
     await Notifications.scheduleNotificationAsync({
         identifier: NOTIFICATION_ID,
         content: {
-            title: 'Chaski',
+            title: 'Chaski en curso...',
             body: `${formatTime(elapsed)} · ${(distanceMeters / 1000).toFixed(2)} km`,
             color: '#19FA00',
-            priority: Notifications.AndroidNotificationPriority.HIGH,
-            sticky: true,
+            priority: Notifications.AndroidNotificationPriority.LOW,
         },
-        trigger: null,
+        trigger: { channelId: CHANNEL_ID },
     });
 }
 

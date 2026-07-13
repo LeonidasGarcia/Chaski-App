@@ -48,9 +48,9 @@ export function useRunTracking(): UseRunTrackingReturn {
     const [speedKmh, setSpeedKmh] = useState(0);
     const watcherRef = useRef<Location.LocationSubscription | null>(null);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const bgIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const lastCoordRef = useRef<Coordinate | null>(null);
     const startTimeRef = useRef<number | null>(null);
+    const distanceRef = useRef(0);
 
     const clearWatcher = useCallback(() => {
         if (watcherRef.current) {
@@ -63,13 +63,6 @@ export function useRunTracking(): UseRunTrackingReturn {
         if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
-        }
-    }, []);
-
-    const clearBgInterval = useCallback(() => {
-        if (bgIntervalRef.current) {
-            clearInterval(bgIntervalRef.current);
-            bgIntervalRef.current = null;
         }
     }, []);
 
@@ -112,6 +105,7 @@ export function useRunTracking(): UseRunTrackingReturn {
         setSpeedKmh(0);
         lastCoordRef.current = null;
         startTimeRef.current = Date.now();
+        distanceRef.current = 0;
         setIsTracking(true);
 
         const watcher = await Location.watchPositionAsync(
@@ -135,7 +129,8 @@ export function useRunTracking(): UseRunTrackingReturn {
                     const dist = haversine(lastCoordRef.current, coord);
                     if (dist < MIN_DISTANCE_METERS) return;
                     if (dist > OUTLIER_THRESHOLD_METERS) return;
-                    setDistanceMeters((prev) => prev + dist);
+                    distanceRef.current += dist;
+                    setDistanceMeters(distanceRef.current);
                 }
 
                 const speed = loc.coords.speed !== null ? Math.round(loc.coords.speed * 3.6) : 0;
@@ -143,13 +138,21 @@ export function useRunTracking(): UseRunTrackingReturn {
                 lastCoordRef.current = coord;
                 setSpeedKmh(speed);
                 setRoute((prev) => [...prev, coord]);
+
+                if (AppState.currentState === 'background') {
+                    const e =
+                        startTimeRef.current !== null
+                            ? Math.floor((Date.now() - startTimeRef.current) / 1000)
+                            : 0;
+                    updateNotification(e, distanceRef.current).catch(() => {});
+                }
             },
         );
         watcherRef.current = watcher;
 
         await Location.startLocationUpdatesAsync(TASK_NAME, {
             accuracy: Location.Accuracy.High,
-            timeInterval: 500,
+            timeInterval: 1000,
             distanceInterval: 0,
             showsBackgroundLocationIndicator: true,
         }).catch(() => {});
@@ -166,47 +169,39 @@ export function useRunTracking(): UseRunTrackingReturn {
         Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
         clearWatcher();
         clearTimer();
-        clearBgInterval();
         routePoints.deleteAll().catch(() => {});
+        distanceRef.current = 0;
         startTimeRef.current = null;
         setIsTracking(false);
-    }, [clearWatcher, clearTimer, clearBgInterval, routePoints]);
+    }, [clearWatcher, clearTimer, routePoints]);
 
     const reset = useCallback(() => {
         cancelNotification().catch(() => {});
         Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
         clearWatcher();
         clearTimer();
-        clearBgInterval();
         routePoints.deleteAll().catch(() => {});
         setRoute([]);
         setElapsed(0);
         setDistanceMeters(0);
         setSpeedKmh(0);
+        distanceRef.current = 0;
         lastCoordRef.current = null;
         startTimeRef.current = null;
         setIsTracking(false);
-    }, [clearWatcher, clearTimer, clearBgInterval, routePoints]);
+    }, [clearWatcher, clearTimer, routePoints]);
 
     useEffect(() => {
         const sub = AppState.addEventListener('change', (nextState) => {
             if (nextState === 'background' && isTracking) {
-                const elapsed =
+                const e =
                     startTimeRef.current !== null
                         ? Math.floor((Date.now() - startTimeRef.current) / 1000)
                         : 0;
-                updateNotification(elapsed, distanceMeters).catch(() => {});
-
-                bgIntervalRef.current = setInterval(() => {
-                    if (startTimeRef.current !== null && isTracking) {
-                        const e = Math.floor((Date.now() - startTimeRef.current) / 1000);
-                        updateNotification(e, distanceMeters).catch(() => {});
-                    }
-                }, 10000);
+                updateNotification(e, distanceRef.current).catch(() => {});
             }
 
             if (nextState === 'active') {
-                clearBgInterval();
                 cancelNotification().catch(() => {});
                 lastCoordRef.current = null;
                 reSyncFromDb();
@@ -215,18 +210,16 @@ export function useRunTracking(): UseRunTrackingReturn {
 
         return () => {
             sub.remove();
-            clearBgInterval();
         };
-    }, [reSyncFromDb, isTracking, distanceMeters, clearBgInterval]);
+    }, [reSyncFromDb, isTracking]);
 
     useEffect(() => {
         return () => {
             Location.stopLocationUpdatesAsync(TASK_NAME).catch(() => {});
             clearWatcher();
             clearTimer();
-            clearBgInterval();
         };
-    }, [clearWatcher, clearTimer, clearBgInterval]);
+    }, [clearWatcher, clearTimer]);
 
     return { isTracking, route, elapsed, distanceMeters, speedKmh, start, stop, reset };
 }
